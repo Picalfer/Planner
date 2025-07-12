@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Текущая неделя{% endblock %}
+{% block week_number %}{{ week.number }}{% endblock %}
+
+{% block content %}
+    <div class="planner-grid">
+        <div class="week-container">
+            <div class="week-header">
+                <h2>{{ week.start_date|date:"d.m.Y" }} — {{ week.end_date|date:"d.m.Y" }}</h2>
+                <div class="week-stats">
+                    <span class="points">{{ week.total_points|default:0 }} баллов</span>
+                </div>
+            </div>
+            <!-- Левая колонка - дни недели -->
+            <div class="days-column">
+                {% for day in days %}
+                    <div class="day-card {% if day.date == today %}today{% endif %}">
+                        <div class="day-header">
+                            <h3>{{ day.day_name }}</h3>
+                            <span class="date">{{ day.date|date:"d.m" }}</span>
+                            <span class="points">{{ day.tasks.count }} задач</span>
+                        </div>
+
+                        <ul class="task-list">
+                            {% for task in day.tasks.all %}
+                                <li class="task {% if task.is_done %}done{% endif %}">
+                                    <span class="task-title">{{ task.title }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

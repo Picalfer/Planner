@@ -1,0 +1,15 @@
+<div class="day-card" id="day-{{ day.id }}">
+  <h3>{{ day.date|date:"D d M" }}</h3>
+  <div class="stats">Баллы: {{ day.points }}/{{ day.total_tasks }}</div>
+  
+  <ul>
+    {% for task in day.tasks.all %}
+      {% include "journal/partials/task.html" %}
+    {% endfor %}
+  </ul>
+  
+  <button hx-post="/add-task/?day_id={{ day.id }}" 
+          hx-target="#day-{{ day.id }} ul">
+    + Добавить дело
+  </button>
+</div>
