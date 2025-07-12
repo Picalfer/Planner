@@ -11,6 +11,21 @@
 <div class="container">
     <header class="header">
         <h1>Мой ежедневник</h1>
+        <!-- В base.html, где у вас кнопка выхода -->
+        <div class="auth-links">
+            {% if user.is_authenticated %}
+                <span>Вы вошли как {{ user.username }}</span>
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit"
+                            style="background: none; border: none; color: #333; cursor: pointer; text-decoration: underline;">
+                        Выйти
+                    </button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Войти</a>
+            {% endif %}
+        </div>
     </header>
 
     <main class="main-content">
@@ -18,7 +33,9 @@
     </main>
 
     <footer class="footer">
-        <p>Неделя {% block week_number %}{% endblock %}</p>
+        {% if user.is_authenticated %}
+            <p>Неделя {% block week_number %}{% endblock %}</p>
+        {% endif %}
     </footer>
 </div>
 </body>

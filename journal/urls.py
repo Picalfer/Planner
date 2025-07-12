@@ -1,7 +1,7 @@
 from django.urls import path
 
-from . import views
+from .views import WeekView
 
 urlpatterns = [
-    path('', views.week_view, name='week'),
+    path('', WeekView.as_view(), name='week'),
 ]
