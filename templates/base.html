@@ -38,5 +38,191 @@
         {% endif %}
     </footer>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Получаем элементы
+        const modal = document.getElementById('taskModal');
+        const addTaskBtns = document.querySelectorAll('.add-task-btn');
+        const closeBtn = document.querySelector('.close');
+        const dayIdInput = document.getElementById('modalDayId');
+        const taskForm = document.getElementById('taskForm');
+
+        // Открытие модального окна
+        addTaskBtns.forEach(btn => {
+            btn.addEventListener('click', function () {
+                modal.style.display = 'block';
+                dayIdInput.value = this.getAttribute('data-day-id');
+            });
+        });
+
+        // Закрытие модального окна
+        closeBtn.addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+
+        // Закрытие при клике вне окна
+        window.addEventListener('click', function (event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Отправка формы
+        taskForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: new FormData(this)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+        });
+
+        // Общий обработчик для всех кнопок задач
+        document.addEventListener('click', function (e) {
+            const taskElement = e.target.closest('.task');
+            if (!taskElement) return;
+
+            const taskId = taskElement.dataset.taskId;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Обработка отметки выполнения
+            if (e.target.classList.contains('task-toggle')) {
+                e.preventDefault();
+                sendTaskAction('toggle', taskId, csrfToken);
+            }
+
+            // Обработка удаления
+            else if (e.target.classList.contains('task-delete')) {
+                e.preventDefault();
+                if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                    sendTaskAction('delete', taskId, csrfToken);
+                }
+            }
+
+            // Обработка редактирования
+            else if (e.target.classList.contains('task-edit')) {
+                e.preventDefault();
+                openEditModal(taskId);
+            }
+        });
+
+        // Функция отправки действий на сервер
+        function sendTaskAction(action, taskId, csrfToken) {
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('task_id', taskId);
+            formData.append('csrfmiddlewaretoken', csrfToken);
+
+            fetch('/task-action/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (action === 'toggle') {
+                            // Обновляем только статус задачи без перезагрузки
+                            const taskElement = document.querySelector(`.task[data-task-id="${taskId}"]`);
+                            if (taskElement) {
+                                taskElement.classList.toggle('done');
+                                const taskTitle = taskElement.querySelector('.task-title');
+                                if (data.is_done) {
+                                    taskTitle.style.textDecoration = 'line-through';
+                                } else {
+                                    taskTitle.style.textDecoration = 'none';
+                                }
+                            }
+                        } else {
+                            // Для delete и edit перезагружаем страницу
+                            window.location.reload();
+                        }
+                    } else {
+                        alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Произошла ошибка при выполнении действия');
+                });
+        }
+
+        // Функция открытия модального окна редактирования
+        function openEditModal(taskId) {
+            const modal = document.getElementById('editModal');
+            const editForm = document.getElementById('editTaskForm');
+            document.getElementById('editTaskId').value = taskId;
+
+            // Удаляем старые обработчики, если они есть
+            const oldClose = modal.querySelector('.close-modal');
+            if (oldClose) oldClose.removeEventListener('click', closeModal);
+
+            // Добавляем новый обработчик закрытия
+            const closeBtn = modal.querySelector('.close');
+            closeBtn.classList.add('close-modal');
+            closeBtn.addEventListener('click', closeModal);
+
+            // Загружаем форму редактирования
+            fetch(`/get-task-form/?task_id=${taskId}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('editFormContent').innerHTML = html;
+                    modal.style.display = 'block';
+
+                    // Обработчик отправки формы
+                    // Замените обработчик отправки формы в функции openEditModal
+                    editForm.onsubmit = function (e) {
+                        e.preventDefault();
+                        const formData = new FormData(editForm);
+                        formData.append('task_id', taskId); // Добавляем task_id в FormData
+
+                        fetch('/task-action/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            },
+                            body: formData
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    closeModal();
+                                    window.location.reload();
+                                } else {
+                                    alert('Ошибка при сохранении: ' + (data.message || 'Неизвестная ошибка'));
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Произошла ошибка при сохранении');
+                            });
+                    };
+                });
+
+            // Функция закрытия модального окна
+            function closeModal() {
+                modal.style.display = 'none';
+                document.querySelector('.close-modal').removeEventListener('click', closeModal);
+            }
+
+            // Закрытие при клике вне окна
+            window.onclick = function (e) {
+                if (e.target == modal) {
+                    closeModal();
+                }
+            };
+        }
+
+    });
+</script>
 </body>
 </html>

@@ -12,26 +12,74 @@
                     <span class="points">{{ week.total_points|default:0 }} баллов</span>
                 </div>
             </div>
-            <!-- Левая колонка - дни недели -->
+
             <div class="days-column">
                 {% for day in days %}
-                    <div class="day-card {% if day.date == today %}today{% endif %}">
+                    <div class="day-card {% if day.today %}today{% endif %}">
                         <div class="day-header">
                             <h3>{{ day.day_name }}</h3>
                             <span class="date">{{ day.date|date:"d.m" }}</span>
                             <span class="points">{{ day.tasks.count }} задач</span>
+                            <button class="add-task-btn" data-day-id="{{ day.id }}">+</button>
                         </div>
 
                         <ul class="task-list">
                             {% for task in day.tasks.all %}
-                                <li class="task {% if task.is_done %}done{% endif %}">
-                                    <span class="task-title">{{ task.title }}</span>
+                                <li class="task {% if task.is_done %}done{% endif %}" data-task-id="{{ task.id }}">
+                                    <div class="task-main">
+                                        <span class="task-title">{{ task.title }}</span>
+                                        <div class="task-actions">
+                                            <button class="task-toggle" title="Отметить выполненной">
+                                                ✓
+                                            </button>
+                                            <button class="task-edit" title="Редактировать">
+                                                ✎
+                                            </button>
+                                            <button class="task-delete" title="Удалить">
+                                                ×
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% if task.description %}
+                                        <div class="task-description">{{ task.description }}</div>
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
+
                     </div>
                 {% endfor %}
             </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Добавить задачу</h3>
+            <form method="post" id="taskForm">
+                {% csrf_token %}
+                <input type="hidden" name="day_id" id="modalDayId">
+                <input type="text" name="title" placeholder="Введите задачу" required>
+                <button type="submit">Добавить</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Модальное окно редактирования -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Редактировать задачу</h3>
+            <form id="editTaskForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="task_id" id="editTaskId">
+                <div id="editFormContent"></div>
+                <button type="submit" class="save-btn">Сохранить</button>
+            </form>
         </div>
     </div>
 {% endblock %}
