@@ -42,6 +42,10 @@ class Day(models.Model):
     day_name = models.CharField(max_length=3)
 
     @property
+    def earned_points(self):
+        return self.tasks.filter(is_done=True).count()
+
+    @property
     def today(self):
         return self.date == timezone.now().date()
 

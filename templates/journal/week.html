@@ -19,7 +19,9 @@
                         <div class="day-header">
                             <h3>{{ day.day_name }}</h3>
                             <span class="date">{{ day.date|date:"d.m" }}</span>
-                            <span class="points">{{ day.tasks.count }} задач</span>
+                            <span class="points">
+                                {{ day.tasks.count }} задач / {{ day.earned_points }} баллов
+                            </span>
                             <button class="add-task-btn" data-day-id="{{ day.id }}">+</button>
                         </div>
 

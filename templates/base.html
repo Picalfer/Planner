@@ -131,15 +131,36 @@
                 .then(data => {
                     if (data.status === 'success') {
                         if (action === 'toggle') {
-                            // Обновляем только статус задачи без перезагрузки
                             const taskElement = document.querySelector(`.task[data-task-id="${taskId}"]`);
                             if (taskElement) {
+                                // Переключаем класс 'done'
                                 taskElement.classList.toggle('done');
-                                const taskTitle = taskElement.querySelector('.task-title');
-                                if (data.is_done) {
-                                    taskTitle.style.textDecoration = 'line-through';
-                                } else {
-                                    taskTitle.style.textDecoration = 'none';
+
+                                // Находим родительский элемент дня
+                                const dayCard = taskElement.closest('.day-card');
+                                if (dayCard) {
+                                    // Находим элемент с баллами дня
+                                    const pointsElement = dayCard.querySelector('.points');
+                                    if (pointsElement) {
+                                        // Разбираем текущий текст (формат: "X задач / Y баллов")
+                                        const text = pointsElement.textContent;
+                                        const [totalTasks, currentPoints] = text.match(/\d+/g);
+
+                                        // Вычисляем новые баллы
+                                        let newPoints = parseInt(currentPoints);
+                                        newPoints = data.is_done ? newPoints + 1 : Math.max(0, newPoints - 1);
+
+                                        // Обновляем текст
+                                        pointsElement.textContent = `${totalTasks} задач / ${newPoints} баллов`;
+                                    }
+
+                                    // Также обновляем общие баллы недели
+                                    const weekPointsElement = document.querySelector('.week-stats .points');
+                                    if (weekPointsElement) {
+                                        const currentWeekPoints = parseInt(weekPointsElement.textContent);
+                                        const newWeekPoints = data.is_done ? currentWeekPoints + 1 : Math.max(0, currentWeekPoints - 1);
+                                        weekPointsElement.textContent = newWeekPoints;
+                                    }
                                 }
                             }
                         } else {
