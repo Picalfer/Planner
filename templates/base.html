@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ежедневник | {% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/planner.css' %}">
+    <link rel="stylesheet" href="{% static 'journal/css/base.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 <div class="container">
     <header class="header">
-        <h1>Мой ежедневник</h1>
-        <!-- В base.html, где у вас кнопка выхода -->
+        <h1>Мой ежедневник - Неделя {{ week_number }}</h1>
         <div class="auth-links">
             {% if user.is_authenticated %}
                 <span>Вы вошли как {{ user.username }}</span>
@@ -34,216 +34,10 @@
 
     <footer class="footer">
         {% if user.is_authenticated %}
-            <p>Неделя {% block week_number %}{% endblock %}</p>
+            <p>Неделя {{ week_number }} ({{ week_start|date:"d.m.y" }} - {{ week_end|date:"d.m.y" }})</p>
         {% endif %}
     </footer>
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Получаем элементы
-        const modal = document.getElementById('taskModal');
-        const addTaskBtns = document.querySelectorAll('.add-task-btn');
-        const closeBtn = document.querySelector('.close');
-        const dayIdInput = document.getElementById('modalDayId');
-        const taskForm = document.getElementById('taskForm');
-
-        // Открытие модального окна
-        addTaskBtns.forEach(btn => {
-            btn.addEventListener('click', function () {
-                modal.style.display = 'block';
-                dayIdInput.value = this.getAttribute('data-day-id');
-            });
-        });
-
-        // Закрытие модального окна
-        closeBtn.addEventListener('click', function () {
-            modal.style.display = 'none';
-        });
-
-        // Закрытие при клике вне окна
-        window.addEventListener('click', function (event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // Отправка формы
-        taskForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            fetch(window.location.href, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                },
-                body: new FormData(this)
-            })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.reload();
-                    }
-                });
-        });
-
-        // Общий обработчик для всех кнопок задач
-        document.addEventListener('click', function (e) {
-            const taskElement = e.target.closest('.task');
-            if (!taskElement) return;
-
-            const taskId = taskElement.dataset.taskId;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            // Обработка отметки выполнения
-            if (e.target.classList.contains('task-toggle')) {
-                e.preventDefault();
-                sendTaskAction('toggle', taskId, csrfToken);
-            }
-
-            // Обработка удаления
-            else if (e.target.classList.contains('task-delete')) {
-                e.preventDefault();
-                if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
-                    sendTaskAction('delete', taskId, csrfToken);
-                }
-            }
-
-            // Обработка редактирования
-            else if (e.target.classList.contains('task-edit')) {
-                e.preventDefault();
-                openEditModal(taskId);
-            }
-        });
-
-        // Функция отправки действий на сервер
-        function sendTaskAction(action, taskId, csrfToken) {
-            const formData = new FormData();
-            formData.append('action', action);
-            formData.append('task_id', taskId);
-            formData.append('csrfmiddlewaretoken', csrfToken);
-
-            fetch('/task-action/', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
-                        if (action === 'toggle') {
-                            const taskElement = document.querySelector(`.task[data-task-id="${taskId}"]`);
-                            if (taskElement) {
-                                // Переключаем класс 'done'
-                                taskElement.classList.toggle('done');
-
-                                // Находим родительский элемент дня
-                                const dayCard = taskElement.closest('.day-card');
-                                if (dayCard) {
-                                    // Находим элемент с баллами дня
-                                    const pointsElement = dayCard.querySelector('.points');
-                                    if (pointsElement) {
-                                        // Разбираем текущий текст (формат: "X задач / Y баллов")
-                                        const text = pointsElement.textContent;
-                                        const [totalTasks, currentPoints] = text.match(/\d+/g);
-
-                                        // Вычисляем новые баллы
-                                        let newPoints = parseInt(currentPoints);
-                                        newPoints = data.is_done ? newPoints + 1 : Math.max(0, newPoints - 1);
-
-                                        // Обновляем текст
-                                        pointsElement.textContent = `${totalTasks} задач / ${newPoints} баллов`;
-                                    }
-
-                                    // Также обновляем общие баллы недели
-                                    const weekPointsElement = document.querySelector('.week-stats .points');
-                                    if (weekPointsElement) {
-                                        const currentWeekPoints = parseInt(weekPointsElement.textContent);
-                                        const newWeekPoints = data.is_done ? currentWeekPoints + 1 : Math.max(0, currentWeekPoints - 1);
-                                        weekPointsElement.textContent = newWeekPoints;
-                                    }
-                                }
-                            }
-                        } else {
-                            // Для delete и edit перезагружаем страницу
-                            window.location.reload();
-                        }
-                    } else {
-                        alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Произошла ошибка при выполнении действия');
-                });
-        }
-
-        // Функция открытия модального окна редактирования
-        function openEditModal(taskId) {
-            const modal = document.getElementById('editModal');
-            const editForm = document.getElementById('editTaskForm');
-            document.getElementById('editTaskId').value = taskId;
-
-            // Удаляем старые обработчики, если они есть
-            const oldClose = modal.querySelector('.close-modal');
-            if (oldClose) oldClose.removeEventListener('click', closeModal);
-
-            // Добавляем новый обработчик закрытия
-            const closeBtn = modal.querySelector('.close');
-            closeBtn.classList.add('close-modal');
-            closeBtn.addEventListener('click', closeModal);
-
-            // Загружаем форму редактирования
-            fetch(`/get-task-form/?task_id=${taskId}`)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('editFormContent').innerHTML = html;
-                    modal.style.display = 'block';
-
-                    // Обработчик отправки формы
-                    // Замените обработчик отправки формы в функции openEditModal
-                    editForm.onsubmit = function (e) {
-                        e.preventDefault();
-                        const formData = new FormData(editForm);
-                        formData.append('task_id', taskId); // Добавляем task_id в FormData
-
-                        fetch('/task-action/', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                            },
-                            body: formData
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.status === 'success') {
-                                    closeModal();
-                                    window.location.reload();
-                                } else {
-                                    alert('Ошибка при сохранении: ' + (data.message || 'Неизвестная ошибка'));
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                alert('Произошла ошибка при сохранении');
-                            });
-                    };
-                });
-
-            // Функция закрытия модального окна
-            function closeModal() {
-                modal.style.display = 'none';
-                document.querySelector('.close-modal').removeEventListener('click', closeModal);
-            }
-
-            // Закрытие при клике вне окна
-            window.onclick = function (e) {
-                if (e.target == modal) {
-                    closeModal();
-                }
-            };
-        }
-
-    });
-</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

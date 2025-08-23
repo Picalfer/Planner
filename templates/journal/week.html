@@ -1,15 +1,29 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Текущая неделя{% endblock %}
-{% block week_number %}{{ week.number }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'journal/css/planner.css' %}">
+{% endblock %}
 
 {% block content %}
     <div class="planner-grid">
         <div class="week-container">
             <div class="week-header">
-                <h2>{{ week.start_date|date:"d.m.Y" }} — {{ week.end_date|date:"d.m.Y" }}</h2>
-                <div class="week-stats">
-                    <span class="points">{{ week.total_points|default:0 }} баллов</span>
+                <div class="week-navigation">
+                    <div id="week-nav-left">
+                        <button id="prev-week" class="nav-button">←</button>
+                        <button id="current-week" class="nav-button styled-button">Сегодня</button>
+                    </div>
+                    <h2>Неделя: <span id="week-range">
+                        {{ week_start|date:"d.m.Y" }} — {{ week_end|date:"d.m.Y" }}
+                    </span></h2>
+                    <button id="next-week" class="nav-button">→</button>
+
+                    <div class="week-stats">
+                        <span class="points">{{ total_points }} баллов</span>
+                    </div>
                 </div>
             </div>
 
@@ -22,7 +36,7 @@
                             <span class="points">
                                 {{ day.tasks.count }} задач / {{ day.earned_points }} баллов
                             </span>
-                            <button class="add-task-btn" data-day-id="{{ day.id }}">+</button>
+                            <button class="add-task-btn" data-date="{{ day.date|date:'Y-m-d' }}">+</button>
                         </div>
 
                         <ul class="task-list">
@@ -31,15 +45,9 @@
                                     <div class="task-main">
                                         <span class="task-title">{{ task.title }}</span>
                                         <div class="task-actions">
-                                            <button class="task-toggle" title="Отметить выполненной">
-                                                ✓
-                                            </button>
-                                            <button class="task-edit" title="Редактировать">
-                                                ✎
-                                            </button>
-                                            <button class="task-delete" title="Удалить">
-                                                ×
-                                            </button>
+                                            <button class="task-toggle" title="Отметить выполненной">✓</button>
+                                            <button class="task-edit" title="Редактировать">✎</button>
+                                            <button class="task-delete" title="Удалить">×</button>
                                         </div>
                                     </div>
                                     {% if task.description %}
@@ -48,7 +56,6 @@
                                 </li>
                             {% endfor %}
                         </ul>
-
                     </div>
                 {% endfor %}
             </div>
@@ -62,13 +69,12 @@
             <h3>Добавить задачу</h3>
             <form method="post" id="taskForm">
                 {% csrf_token %}
-                <input type="hidden" name="day_id" id="modalDayId">
+                <input type="hidden" name="date" id="modalDate">
                 <input type="text" name="title" placeholder="Введите задачу" required>
                 <button type="submit">Добавить</button>
             </form>
         </div>
     </div>
-
 
     <!-- Модальное окно редактирования -->
     <div id="editModal" class="modal">
@@ -84,4 +90,8 @@
             </form>
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'journal/js/app.js' %}" type="module"></script>
 {% endblock %}

@@ -20,6 +20,14 @@ class TaskForm(forms.ModelForm):
         }
 
 
-class TaskEditForm(TaskForm):
-    class Meta(TaskForm.Meta):
-        fields = ['title', 'description', 'is_done']
+from django import forms
+from .models import Task
+
+class TaskEditForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ['title', 'description', 'date']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }

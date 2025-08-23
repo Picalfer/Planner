@@ -1,11 +1,17 @@
 /* Базовые настройки */
 :root {
     --primary: #ee9043;
+    --primary-color: #ee9043;
+    --primary-hover: #bd6116;
     --secondary: #f1cd3b;
     --light: #f8f9fa;
     --dark: #212529;
     --success: #4cc9f0;
+    --header-bg: #dcb99e;
     --danger: #f72585;
+    --text-primary: black;
+    --text-secondary: #2c2c2c;
+    --bg: #ee9043
 }
 
 body {
@@ -145,7 +151,6 @@ body {
 }
 
 .week-stats {
-    margin-top: 0.5rem;
     font-size: 0.9rem;
 }
 
@@ -470,4 +475,48 @@ body {
 .day-header .points:before {
     content: "•";
     margin: 0 5px;
+}
+
+
+.week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 5px;
+}
+
+.week-navigation h2 {
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.nav-button {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-color: var(--header-bg);
+    color: var(--text-primary);
+}
+
+.nav-button:hover {
+    background-color: var(--bg);
+    border-color: var(--text-secondary);
+}
+
+.styled-button {
+    background: linear-gradient(135deg, var(--primary-color), #818cf8);
+    color: white;
+    border: 1px solid var(--border-color);
+    padding: 3px 5px;
+    border-radius: 6px;
+    transition: all 0.4s ease;
+}
+
+.styled-button:hover {
+    background: linear-gradient(135deg, var(--primary-hover), #4649dc);
+    border-color: var(--text-secondary);
 }
