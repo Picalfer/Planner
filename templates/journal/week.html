@@ -61,35 +61,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Модальное окно -->
-    <div id="taskModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Добавить задачу</h3>
-            <form method="post" id="taskForm">
-                {% csrf_token %}
-                <input type="hidden" name="date" id="modalDate">
-                <input type="text" name="title" placeholder="Введите задачу" required>
-                <button type="submit">Добавить</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно редактирования -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Редактировать задачу</h3>
-            <form id="editTaskForm" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="edit">
-                <input type="hidden" name="task_id" id="editTaskId">
-                <div id="editFormContent"></div>
-                <button type="submit" class="save-btn">Сохранить</button>
-            </form>
-        </div>
-    </div>
 {% endblock %}
 
 {% block scripts %}

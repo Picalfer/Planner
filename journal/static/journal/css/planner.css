@@ -130,29 +130,6 @@ main {
     font-size: 0.8rem;
 }
 
-/* Список задач */
-.task-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.task {
-    padding: 0.5rem 0;
-    border-bottom: 1px dashed #eee;
-    display: flex;
-    align-items: center;
-}
-
-.task:last-child {
-    border-bottom: none;
-}
-
-.task.done .task-title {
-    text-decoration: line-through;
-    color: #6c757d;
-}
-
 /* Заголовок недели */
 .week-header {
     margin-bottom: 1rem;
@@ -177,65 +154,6 @@ main {
     color: var(--primary);
 }
 
-/* стили для логина */
-/* Добавьте это в ваш planner.css */
-.login-container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.login-container h2 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.login-container form {
-    display: flex;
-    flex-direction: column;
-}
-
-.login-container form p {
-    margin-bottom: 15px;
-}
-
-.login-container label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.login-container input[type="text"],
-.login-container input[type="password"] {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.login-button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.login-button:hover {
-    background-color: #45a049;
-}
-
-.errorlist {
-    color: red;
-    margin-bottom: 15px;
-}
-
 .auth-links {
     font-size: 14px;
 }
@@ -248,69 +166,6 @@ main {
 
 .auth-links a:hover {
     text-decoration: underline;
-}
-
-/* конец секции */
-
-/* Стили модального окна */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 300px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover {
-    color: black;
-}
-
-.modal-content h3 {
-    margin-top: 0;
-    color: #333;
-}
-
-.modal-content input[type="text"] {
-    width: 100%;
-    padding: 8px;
-    margin: 8px 0;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.modal-content button[type="submit"] {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
-}
-
-.modal-content button[type="submit"]:hover {
-    background-color: #45a049;
 }
 
 /* Стиль кнопки добавления задачи */
@@ -392,43 +247,6 @@ main {
     font-size: 0.9em;
 }
 
-/* Модальное окно */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    overflow: auto;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 100px auto;
-    padding: 20px;
-    border: 1px solid #888;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    position: relative;
-    animation: modalopen 0.3s;
-}
-
-@keyframes modalopen {
-    from {
-        opacity: 0;
-        transform: translateY(-50px)
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0)
-    }
-}
-
 .close {
     color: #aaa;
     position: absolute;
@@ -441,47 +259,6 @@ main {
 
 .close:hover {
     color: black;
-}
-
-/* Форма редактирования */
-#editTaskForm input[type="text"],
-#editTaskForm textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-#editTaskForm textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-#editTaskForm button[type="submit"] {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 10px;
-}
-
-#editTaskForm button[type="submit"]:hover {
-    background-color: #45a049;
-}
-
-#editTaskForm .checkbox-label {
-    display: flex;
-    align-items: center;
-    margin: 10px 0;
-}
-
-#editTaskForm .checkbox-label input {
-    margin-right: 10px;
 }
 
 .day-header .points {
