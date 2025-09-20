@@ -88,8 +88,10 @@ main {
 .day-card {
     background: white;
     border-radius: 8px;
+
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 1rem;
+    padding-left: 15px;
     transition: transform 0.2s;
 }
 
@@ -100,6 +102,7 @@ main {
 
 .day-card.today {
     border-left: 4px solid var(--primary);
+    padding-left: 11px;
 }
 
 .day-header {

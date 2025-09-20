@@ -1,19 +1,18 @@
-import {formatDate} from "./utils.js";
+import {DAY_NAMES, formatDate, formatWeekRange} from './utils.js';
 
 export class WeekManager {
     constructor() {
         this.currentWeekOffset = 0;
+        this.dayNames = DAY_NAMES;
     }
 
-    getDayOfWeek(date) {
-        return ['sunday', 'monday', 'tuesday', 'wednesday',
-            'thursday', 'friday', 'saturday'][date.getDay()];
+    getCurrentWeekDates() {
+        return this.getWeekDates(this.currentWeekOffset);
     }
 
     getWeekDates(offset = 0) {
         const today = new Date();
         const currentDay = today.getDay();
-        // Воскресенье (0) становится 6, чтобы правильно вычислить понедельник
         const diff = currentDay === 0 ? 6 : currentDay - 1;
 
         const monday = new Date(today);
@@ -26,48 +25,51 @@ export class WeekManager {
         });
     }
 
-    updateHeaderDates() {
-        const dates = this.getWeekDates(this.currentWeekOffset);
-        const dateElements = document.querySelectorAll('.date');
-        const dayHeaders = document.querySelectorAll('.day-header');
+    updateWeekInfo() {
+        const dates = this.getCurrentWeekDates();
+        this.updateWeekRange(dates);
+        this.updateDayCards(dates);
+    }
 
-        const today = new Date();
-        const currentDate = today.getDate();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
+    updateWeekRange(dates) {
+        const weekRangeElement = document.getElementById('week-range');
+        if (weekRangeElement) {
+            weekRangeElement.textContent = formatWeekRange(dates[0], dates[6]);
+        }
+    }
 
-        dateElements.forEach((element, index) => {
-            const displayedDate = dates[index]; // Используем уже вычисленные даты из getWeekDates
-            element.textContent = formatDate(displayedDate);
+    updateDayCards(dates) {
+        const dayCards = document.querySelectorAll('.day-card');
 
-            // Проверяем, является ли день текущим
-            const isCurrentDay = displayedDate.getDate() === currentDate &&
-                displayedDate.getMonth() === currentMonth &&
-                displayedDate.getFullYear() === currentYear;
-
-            dayHeaders[index].classList.toggle('current-day', isCurrentDay);
+        dates.forEach((date, index) => {
+            if (dayCards[index]) {
+                this.updateDayCard(dayCards[index], date, index);
+            }
         });
     }
 
-    updateWeekInfo() {
-        const dates = this.getWeekDates(this.currentWeekOffset);
-        const [monday, sunday] = [dates[0], dates[6]]; // Первый и последний день недели
+    updateDayCard(dayCard, date, dayIndex) {
+        // Обновляем дату
+        const dateElement = dayCard.querySelector('.date');
+        if (dateElement) {
+            dateElement.textContent = formatDate(date);
+        }
 
-        const weekRangeElement = document.getElementById('week-range');
-        weekRangeElement.textContent = `${formatDate(monday)} - ${formatDate(sunday)}`;
-    }
+        // Обновляем день недели
+        const dayNameElement = dayCard.querySelector('h3');
+        if (dayNameElement) {
+            dayNameElement.textContent = this.dayNames[dayIndex];
+        }
 
-    getWeekRange(offset = 0) {
+        // Обновляем data-атрибут для кнопки добавления
+        const addButton = dayCard.querySelector('.add-task-btn');
+        if (addButton) {
+            addButton.dataset.date = date.toISOString().split('T')[0];
+        }
+
+        // Обновляем класс today
         const today = new Date();
-        const currentDay = today.getDay();
-        const diff = currentDay === 0 ? 6 : currentDay - 1; // Коррекция для воскресенья
-
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - diff + (offset * 7));
-
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-
-        return {start: monday, end: sunday};
+        const isToday = date.toDateString() === today.toDateString();
+        dayCard.classList.toggle('today', isToday);
     }
 }
