@@ -1,6 +1,9 @@
+import {showNotification} from "./utils.js";
+
 export class TaskManager {
     constructor() {
         this.allTasks = this.extractTasksFromDOM();
+        this.setupModalListeners();
     }
 
     extractTasksFromDOM() {
@@ -25,31 +28,13 @@ export class TaskManager {
     filterTasksForWeek(weekDates) {
         const dateStrings = weekDates.map(date => date.toISOString().split('T')[0]);
 
-        // Сначала скрываем все задачи
-        this.allTasks.forEach(task => {
-            task.element.style.display = 'none';
-        });
-
-        // Показываем только задачи текущей недели
         this.allTasks.forEach(task => {
             const taskDateStr = task.date.toISOString().split('T')[0];
             const shouldShow = dateStrings.includes(taskDateStr);
 
-            if (shouldShow) {
-                task.element.style.display = 'block';
-
-                // Перемещаем задачу в правильный день (на случай если дата изменилась)
-                const correctDayIndex = dateStrings.indexOf(taskDateStr);
-                const dayCards = document.querySelectorAll('.day-card');
-                const taskList = dayCards[correctDayIndex]?.querySelector('.task-list');
-
-                if (taskList && !taskList.contains(task.element)) {
-                    taskList.appendChild(task.element);
-                }
-            }
+            task.element.style.display = shouldShow ? 'block' : 'none';
         });
 
-        // Обновляем статистику задач для каждого дня
         this.updateDayStats(weekDates);
     }
 
@@ -73,5 +58,126 @@ export class TaskManager {
                 }
             }
         });
+    }
+
+    setupModalListeners() {
+        const modal = document.getElementById('task-modal');
+        const closeBtn = document.querySelector('.close');
+        const form = document.getElementById('task-form');
+
+        document.querySelectorAll('.add-task-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const date = e.target.dataset.date;
+                document.getElementById('task-date').value = date;
+                modal.style.display = 'flex';
+            });
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.createTask();
+        });
+    }
+
+    async createTask() {
+        const formData = new FormData(document.getElementById('task-form'));
+        const taskData = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            date: formData.get('date'),
+            is_done: false
+        };
+
+        try {
+            const response = await fetch('/api/tasks/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify(taskData)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.updateTasksForDate(result.tasks, taskData.date);
+                document.getElementById('task-modal').style.display = 'none';
+                document.getElementById('task-form').reset();
+                showNotification('Задача успешно создана!', 'success');
+            } else {
+                const error = await response.json();
+                showNotification(`Ошибка: ${error.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error creating task:', error);
+            showNotification('Ошибка создания задачи', 'error');
+        }
+    }
+
+    updateTasksForDate(tasks, dateString) {
+        const dayCard = this.findDayCardByDate(dateString);
+        if (!dayCard) return;
+
+        const taskList = dayCard.querySelector('.task-list');
+        taskList.innerHTML = '';
+
+        tasks.forEach(task => {
+            const taskElement = this.createTaskElement(task);
+            taskList.appendChild(taskElement);
+        });
+
+        this.allTasks = this.extractTasksFromDOM();
+    }
+
+
+    getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    addTaskToDOM(task) {
+        const taskElement = this.createTaskElement(task);
+        const dayCard = this.findDayCardByDate(task.date);
+
+        if (dayCard) {
+            const taskList = dayCard.querySelector('.task-list');
+            taskList.appendChild(taskElement);
+            this.allTasks.push({
+                id: task.id,
+                date: new Date(task.date),
+                element: taskElement
+            });
+        }
+    }
+
+    createTaskElement(task) {
+        const li = document.createElement('li');
+        li.className = 'task';
+        li.dataset.taskId = task.id;
+        li.innerHTML = `
+            <div class="task-main">
+                <span class="task-title">${task.title}</span>
+                <div class="task-actions">
+                    <button class="task-toggle">✓</button>
+                    <button class="task-edit">✎</button>
+                    <button class="task-delete">×</button>
+                </div>
+            </div>
+            ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+        `;
+        return li;
+    }
+
+    findDayCardByDate(dateString) {
+        return document.querySelector(`.add-task-btn[data-date="${dateString}"]`)?.closest('.day-card');
     }
 }

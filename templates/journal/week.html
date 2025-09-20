@@ -63,6 +63,25 @@
             </div>
         </div>
     </div>
+
+    <div id="task-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 class="modal-title">Добавить задачу</h3>
+            <form id="task-form">
+                <input type="hidden" id="task-date" name="date">
+                <div class="form-group">
+                    <label for="task-title">Название:</label>
+                    <input type="text" id="task-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Описание:</label>
+                    <textarea id="task-description" name="description"></textarea>
+                </div>
+                <button type="submit" class="styled-button">Добавить</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}

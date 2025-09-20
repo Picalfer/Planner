@@ -37,6 +37,8 @@
             <p>Неделя {{ week_number }} ({{ week_start|date:"d.m.y" }} - {{ week_end|date:"d.m.y" }})</p>
         {% endif %}
     </footer>
+
+    <div id="notification" style="display: none;"></div>
 </div>
 {% block scripts %}{% endblock %}
 </body>

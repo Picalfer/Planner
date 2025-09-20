@@ -7,7 +7,7 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     is_done = models.BooleanField(default=False)
-    date = models.DateField()  # Дата задачи
+    date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
