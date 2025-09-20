@@ -1,8 +1,8 @@
 /* Базовые настройки */
 :root {
     --primary: #ee9043;
-    --primary-color: #ee9043;
-    --primary-hover: #bd6116;
+    --primary-color: #ffc089;
+    --primary-hover: #faa249;
     --secondary: #f1cd3b;
     --light: #f8f9fa;
     --dark: #212529;
@@ -14,6 +14,12 @@
     --bg: #ee9043
 }
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
@@ -21,10 +27,14 @@ body {
     background-color: #f5f7fa;
     margin: 0;
     padding: 0;
+    height: 100vh;
 }
 
 .container {
     max-width: 1200px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -35,9 +45,11 @@ body {
     color: white;
     padding: 1rem 1rem;
     margin-bottom: 2rem;
+    flex-grow: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 1;
 }
 
 .header h1 {
@@ -45,11 +57,17 @@ body {
     font-size: 1.8rem;
 }
 
+main {
+    flex-grow: 8;
+    flex-shrink: 1;
+}
+
 .footer {
     text-align: center;
     padding: 1rem 0;
-    margin-top: 2rem;
+    flex-grow: 1;
     color: #6c757d;
+    flex-shrink: 1;
 }
 
 /* Основная сетка */
@@ -472,12 +490,6 @@ body {
     margin-left: 10px;
 }
 
-.day-header .points:before {
-    content: "•";
-    margin: 0 5px;
-}
-
-
 .week-navigation {
     display: flex;
     justify-content: space-between;
@@ -508,15 +520,11 @@ body {
 }
 
 .styled-button {
-    background: linear-gradient(135deg, var(--primary-color), #818cf8);
-    color: white;
-    border: 1px solid var(--border-color);
-    padding: 3px 5px;
-    border-radius: 6px;
+    background: linear-gradient(135deg, var(--primary-color), #9ca5fd);
     transition: all 0.4s ease;
 }
 
 .styled-button:hover {
-    background: linear-gradient(135deg, var(--primary-hover), #4649dc);
+    background: linear-gradient(135deg, var(--primary-hover), #767aff);
     border-color: var(--text-secondary);
 }

@@ -2,14 +2,12 @@ from datetime import timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.views.generic import TemplateView, View
+from django.views.generic import TemplateView
 
-from .forms import TaskEditForm
 from .models import Task
 
 
@@ -84,49 +82,3 @@ class WeekView(LoginRequiredMixin, TemplateView):
                 pass
 
         return redirect('week')
-
-
-class TaskActionsView(LoginRequiredMixin, View):
-    def post(self, request, *args, **kwargs):
-        action = request.POST.get('action')
-        task_id = request.POST.get('task_id')
-
-        if not task_id:
-            return JsonResponse({'status': 'error', 'message': 'Task ID is required'}, status=400)
-
-        try:
-            task = Task.objects.get(id=task_id, user=request.user)
-
-            if action == 'toggle':
-                task.toggle_done()
-                return JsonResponse({'status': 'success', 'is_done': task.is_done})
-
-            elif action == 'delete':
-                task.delete()
-                return JsonResponse({'status': 'success'})
-
-            elif action == 'edit':
-                form = TaskEditForm(request.POST, instance=task)
-                if form.is_valid():
-                    form.save()
-                    return JsonResponse({'status': 'success'})
-                return JsonResponse({
-                    'status': 'error',
-                    'errors': form.errors.as_json()
-                }, status=400)
-
-            return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
-
-        except Task.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Task not found'}, status=404)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-
-def get_task_form(request):
-    task_id = request.GET.get('task_id')
-    task = Task.objects.get(id=task_id, user=request.user)
-    form = TaskEditForm(instance=task)
-    return HttpResponse(render_to_string('journal/task_edit_form.html', {
-        'form': form
-    }))
