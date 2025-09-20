@@ -20,10 +20,10 @@
                         {{ week_start|date:"d.m.Y" }} — {{ week_end|date:"d.m.Y" }}
                     </span></h2>
                     <button id="next-week" class="nav-button">→</button>
+                </div>
 
-                    <div class="week-stats">
-                        <span class="points">{{ total_points }} баллов</span>
-                    </div>
+                <div class="week-stats">
+                    <span class="points">{{ total_points }} баллов</span>
                 </div>
             </div>
 
@@ -32,11 +32,13 @@
                     <div class="day-card {% if day.today %}today{% endif %}">
                         <div class="day-header">
                             <h3>{{ day.day_name }}</h3>
-                            <span class="date">{{ day.date|date:"d.m" }}</span>
-                            <span class="points">
+                            <div>
+                                <span class="date">{{ day.date|date:"d.m" }}</span>
+                                <span class="points">
                                 {{ day.tasks.count }} задач / {{ day.earned_points }} баллов
                             </span>
-                            <button class="add-task-btn" data-date="{{ day.date|date:'Y-m-d' }}">+</button>
+                                <button class="add-task-btn" data-date="{{ day.date|date:'Y-m-d' }}">+</button>
+                            </div>
                         </div>
 
                         <ul class="task-list">

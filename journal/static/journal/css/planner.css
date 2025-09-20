@@ -1,76 +1,3 @@
-/* Базовые настройки */
-:root {
-    --primary: #ee9043;
-    --primary-color: #ffc089;
-    --primary-hover: #faa249;
-    --secondary: #f1cd3b;
-    --light: #f8f9fa;
-    --dark: #212529;
-    --success: #4cc9f0;
-    --header-bg: #dcb99e;
-    --danger: #f72585;
-    --text-primary: black;
-    --text-secondary: #2c2c2c;
-    --bg: #ee9043
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-    color: var(--dark);
-    background-color: #f5f7fa;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Шапка и подвал */
-.header {
-    background-color: var(--primary);
-    color: white;
-    padding: 1rem 1rem;
-    margin-bottom: 2rem;
-    flex-grow: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 1;
-}
-
-.header h1 {
-    margin: 0;
-    font-size: 1.8rem;
-}
-
-main {
-    flex-grow: 8;
-    flex-shrink: 1;
-}
-
-.footer {
-    text-align: center;
-    padding: 1rem 0;
-    flex-grow: 1;
-    color: #6c757d;
-    flex-shrink: 1;
-}
-
-/* Основная сетка */
 .planner-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -84,11 +11,9 @@ main {
     width: 50%;
 }
 
-/* Карточка дня */
 .day-card {
-    background: white;
+    background: var(--card-bg);
     border-radius: 8px;
-
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 1rem;
     padding-left: 15px;
@@ -108,9 +33,12 @@ main {
 .day-header {
     display: flex;
     align-items: center;
+    flex-direction: row;
+    flex-grow: 1;
+    justify-content: space-between;
     margin-bottom: 0.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .day-header h3 {
@@ -122,34 +50,16 @@ main {
 
 .day-header .date {
     margin-left: 10px;
-    color: #6c757d;
+    color: var(--text-secondary);
 }
 
 .day-header .points {
-    margin-left: auto;
-    background: #e9ecef;
+    background: var(--accent-bg);
+    color: var(--accent-color);
     padding: 0.2rem 0.5rem;
     border-radius: 20px;
-    font-size: 0.8rem;
-}
-
-/* Заголовок недели */
-.week-header {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.week-header h2 {
-    margin: 0;
-    font-size: 1.3rem;
-    color: var(--dark);
-}
-
-.week-stats {
     font-size: 0.9rem;
+    margin-left: 10px;
 }
 
 .points {
@@ -157,23 +67,8 @@ main {
     color: var(--primary);
 }
 
-.auth-links {
-    font-size: 14px;
-}
-
-.auth-links a {
-    color: #333;
-    text-decoration: none;
-    margin-left: 10px;
-}
-
-.auth-links a:hover {
-    text-decoration: underline;
-}
-
-/* Стиль кнопки добавления задачи */
 .add-task-btn {
-    background: #4CAF50;
+    background: var(--success);
     color: white;
     border: none;
     border-radius: 50%;
@@ -186,21 +81,20 @@ main {
 }
 
 .add-task-btn:hover {
-    background: #45a049;
+    background: var(--primary-hover);
 }
 
-/* Стили задач */
 .task {
     padding: 10px;
     margin: 5px 0;
-    background: #f9f9f9;
     border-radius: 4px;
-    border-left: 3px solid #4CAF50;
+    background: var(--light);
+    border-left: 3px solid var(--success);
 }
 
 .task.done {
     opacity: 0.7;
-    border-left-color: #ccc;
+    border-left-color: var(--text-secondary);
 }
 
 .task-main {
@@ -231,57 +125,67 @@ main {
 }
 
 .task-toggle {
-    color: #4CAF50;
+    color: var(--success);
 }
 
 .task-edit {
-    color: #2196F3;
+    color: var(--primary);
 }
 
 .task-delete {
-    color: #f44336;
+    color: var(--danger);
 }
 
 .task-description {
     margin-top: 5px;
     padding-top: 5px;
-    border-top: 1px dashed #ddd;
-    color: #666;
+    border-top: 1px dashed var(--border-color);
+    color: var(--text-secondary);
     font-size: 0.9em;
 }
 
-.close {
-    color: #aaa;
-    position: absolute;
-    right: 20px;
-    top: 10px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover {
-    color: black;
-}
-
-.day-header .points {
-    font-size: 0.9em;
-    color: #666;
-    margin-left: 10px;
+.week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+    padding: 15px;
+    background-color: var(--header-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
 }
 
 .week-navigation {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 5px;
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 15px;
+    min-width: 400px;
+    flex-grow: 1;
 }
 
 .week-navigation h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 250px;
     text-align: center;
-    font-size: 1.2em;
+}
+
+#week-range {
+    display: inline-block;
+    min-width: 250px;
+    text-align: center;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+#week-nav-left {
+    display: flex;
+    gap: 10px;
 }
 
 .nav-button {
@@ -292,6 +196,7 @@ main {
     transition: all 0.2s ease;
     background-color: var(--header-bg);
     color: var(--text-primary);
+    cursor: pointer;
 }
 
 .nav-button:hover {
@@ -300,11 +205,23 @@ main {
 }
 
 .styled-button {
-    background: linear-gradient(135deg, var(--primary-color), #9ca5fd);
-    transition: all 0.4s ease;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
 }
 
 .styled-button:hover {
-    background: linear-gradient(135deg, var(--primary-hover), #767aff);
-    border-color: var(--text-secondary);
+    background-color: var(--primary-dark);
+}
+
+.week-stats {
+    padding: 8px 16px;
+    background-color: var(--accent-bg);
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.week-stats .points {
+    color: var(--accent-color);
+    font-size: 1.1rem;
 }
