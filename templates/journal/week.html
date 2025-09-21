@@ -82,6 +82,50 @@
             </form>
         </div>
     </div>
+
+    <div id="task-detail-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" id="close-task-modal">&times;</span>
+            <h3 class="modal-title">Редактирование задачи</h3>
+            <form id="task-edit-form">
+                <input type="hidden" id="edit-task-id" name="id">
+                <input type="hidden" id="edit-task-date" name="date">
+
+                <div class="form-group">
+                    <label for="edit-task-title">Название:</label>
+                    <input type="text" id="edit-task-title" name="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-task-description">Описание:</label>
+                    <textarea id="edit-task-description" name="description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="edit-task-done" name="is_done">
+                        <span>Выполнена</span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="danger-button" id="delete-task-btn">Удалить</button>
+                    <button type="submit" class="styled-button">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Подтверждение удаления</h3>
+            <p>Вы уверены, что хотите удалить эту задачу?</p>
+            <div class="form-actions">
+                <button type="button" class="nav-button" id="cancel-delete">Отмена</button>
+                <button type="button" class="danger-button" id="confirm-delete">Удалить</button>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}

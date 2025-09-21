@@ -153,6 +153,13 @@ li {
     color: var(--primary);
 }
 
+.task-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 .add-task-btn {
     background: var(--success);
     color: white;
@@ -172,7 +179,7 @@ li {
 
 .task {
     padding: 10px;
-    margin: 5px 0;
+    flex-grow: 1;
     border-radius: 4px;
     background: var(--light);
     border-left: 3px solid var(--success);
@@ -297,4 +304,60 @@ li {
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.danger-button {
+    background-color: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.danger-button:hover {
+    background-color: var(--danger);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-label:hover {
+    background-color: var(--light);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--success);
+}
+
+.checkbox-label span {
+    flex: 1;
+    color: var(--text-primary);
+    font-weight: 500;
 }
