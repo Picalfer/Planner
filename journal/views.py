@@ -1,10 +1,13 @@
+import json
 from datetime import timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.shortcuts import redirect
+from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
 
 from .models import Task
@@ -27,10 +30,10 @@ class WeekView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         today = timezone.now().date()
         start_date = today - timedelta(days=today.weekday())
 
-        # Создаем список дней недели
         days = []
         day_names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
@@ -61,32 +64,39 @@ class WeekView(LoginRequiredMixin, TemplateView):
 
         return context
 
-    def post(self, request, *args, **kwargs):
-        date_str = request.POST.get('date')
-        title = request.POST.get('title')
 
-        if date_str and title:
-            try:
-                date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
-                Task.objects.create(
-                    user=request.user,
-                    date=date,
-                    title=title
-                )
+@csrf_exempt
+def get_week_tasks(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Требуется авторизация'}, status=401)
 
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'status': 'success'})
+    try:
+        week_offset = int(request.GET.get('week_offset', 0))
+        today = timezone.now().date()
+        start_date = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+        end_date = start_date + timedelta(days=6)
 
-            except ValueError:
-                pass
+        tasks = Task.objects.filter(
+            user=request.user,
+            date__range=[start_date, end_date]
+        )
 
-        return redirect('week')
+        tasks_data = [{
+            'id': t.id,
+            'title': t.title,
+            'description': t.description,
+            'date': t.date.isoformat(),
+            'is_done': t.is_done
+        } for t in tasks]
 
+        return JsonResponse({
+            'tasks': tasks_data,
+            'week_start': start_date.isoformat(),
+            'week_end': end_date.isoformat()
+        })
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-import json
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @csrf_exempt

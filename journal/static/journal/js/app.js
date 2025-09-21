@@ -4,7 +4,7 @@ import {TaskManager} from './taskManager.js';
 class DailyPlannerApp {
     constructor() {
         this.weekManager = new WeekManager();
-        this.taskManager = new TaskManager();
+        this.taskManager = new TaskManager(this.weekManager);
         this.setupEventListeners();
         this.init();
     }
@@ -28,27 +28,30 @@ class DailyPlannerApp {
         });
     }
 
-    prevWeek() {
+    async prevWeek() {
         this.weekManager.currentWeekOffset--;
-        this.updateDisplay();
+        await this.updateDisplay();
     }
 
-    nextWeek() {
+    async nextWeek() {
         this.weekManager.currentWeekOffset++;
-        this.updateDisplay();
+        await this.updateDisplay();
     }
 
-    goToCurrentWeek() {
+    async goToCurrentWeek() {
         if (this.weekManager.currentWeekOffset !== 0) {
             this.weekManager.currentWeekOffset = 0;
-            this.updateDisplay();
+            await this.updateDisplay();
         }
     }
 
-    updateDisplay() {
+    async updateDisplay() {
         const currentWeekDates = this.weekManager.getCurrentWeekDates();
         this.weekManager.updateWeekInfo();
-        this.taskManager.filterTasksForWeek(currentWeekDates);
+
+        // Загружаем задачи для текущей недели
+        const tasks = await this.weekManager.loadWeekTasks(this.weekManager.currentWeekOffset);
+        this.taskManager.displayTasksForWeek(tasks, currentWeekDates);
     }
 }
 

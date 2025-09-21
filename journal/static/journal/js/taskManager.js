@@ -1,7 +1,8 @@
 import {showNotification} from "./utils.js";
 
 export class TaskManager {
-    constructor() {
+    constructor(weekManager) {
+        this.weekManager = weekManager;
         this.allTasks = this.extractTasksFromDOM();
         this.setupModalListeners();
     }
@@ -111,6 +112,11 @@ export class TaskManager {
             if (response.ok) {
                 const result = await response.json();
                 this.updateTasksForDate(result.tasks, taskData.date);
+
+                // После добавления задачи обновляем фильтрацию по текущей неделе
+                const currentWeekDates = this.weekManager.getCurrentWeekDates();
+                this.filterTasksForWeek(currentWeekDates);
+
                 document.getElementById('task-modal').style.display = 'none';
                 document.getElementById('task-form').reset();
                 showNotification('Задача успешно создана!', 'success');
@@ -179,5 +185,18 @@ export class TaskManager {
 
     findDayCardByDate(dateString) {
         return document.querySelector(`.add-task-btn[data-date="${dateString}"]`)?.closest('.day-card');
+    }
+
+    displayTasksForWeek(tasks, weekDates) {
+        // Очищаем только задачи, сохраняя структуру дней
+        document.querySelectorAll('.task').forEach(task => task.remove());
+
+        // Добавляем новые задачи
+        tasks.forEach(task => {
+            this.addTaskToDOM(task);
+        });
+
+        // Обновляем статистику
+        this.updateDayStats(weekDates);
     }
 }

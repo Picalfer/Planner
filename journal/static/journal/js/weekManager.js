@@ -72,4 +72,18 @@ export class WeekManager {
         const isToday = date.toDateString() === today.toDateString();
         dayCard.classList.toggle('today', isToday);
     }
+
+    async loadWeekTasks(offset = 0) {
+        try {
+            const response = await fetch(`/api/tasks/week/?week_offset=${offset}`);
+            if (response.ok) {
+                const data = await response.json();
+                return data.tasks;
+            }
+        } catch (error) {
+            console.error('Error loading week tasks:', error);
+        }
+        return [];
+    }
+
 }
