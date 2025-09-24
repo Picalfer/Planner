@@ -1,91 +1,12 @@
-li {
-    list-style-type: none;
-}
+@import "week-header.css";
 
-.week-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 15px;
-    padding: 15px;
-    background-color: var(--header-bg);
-    border-radius: 12px;
-    box-shadow: var(--shadow-sm);
-}
-
-.week-navigation {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-direction: row;
-    gap: 15px;
-    min-width: 400px;
-    flex-grow: 1;
-}
-
-.week-navigation h2 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    min-width: 250px;
-    text-align: center;
-}
-
-#week-range {
-    display: inline-block;
-    min-width: 250px;
-    text-align: center;
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-
-#week-nav-left {
+.week-content {
     display: flex;
     gap: 10px;
 }
 
-.nav-button {
-    padding: 8px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    background-color: var(--header-bg);
-    color: var(--text-primary);
-    cursor: pointer;
-}
-
-.nav-button:hover {
-    background-color: var(--bg);
-    border-color: var(--text-secondary);
-}
-
-.styled-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.styled-button:hover {
-    background-color: var(--primary-dark);
-}
-
-.week-stats {
-    padding: 8px 16px;
-    background-color: var(--accent-bg);
-    border-radius: 6px;
-    font-weight: 500;
-}
-
-.week-stats .points {
-    color: var(--accent-color);
-    font-size: 1.1rem;
+li {
+    list-style-type: none;
 }
 
 .days-column {
