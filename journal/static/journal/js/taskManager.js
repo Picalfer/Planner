@@ -9,120 +9,113 @@ export class TaskManager {
     }
 
     setupTaskListeners() {
+        this.setupModalEventListeners();
+        this.setupTaskClickHandlers();
+    }
+
+    setupModalEventListeners() {
+        const closeModal = (modalId) => document.getElementById(modalId).style.display = 'none';
+        const openModal = (modalId) => document.getElementById(modalId).style.display = 'flex';
+
         window.addEventListener('click', (e) => {
-            if (e.target.id === 'task-detail-modal') {
-                document.getElementById('task-detail-modal').style.display = 'none';
-            }
-            if (e.target.id === 'confirm-modal') {
-                document.getElementById('confirm-modal').style.display = 'none';
-            }
+            if (e.target.id === 'task-detail-modal') closeModal('task-detail-modal');
+            if (e.target.id === 'confirm-modal') closeModal('confirm-modal');
         });
 
-        document.getElementById('close-task-modal').addEventListener('click', () => {
-            document.getElementById('task-detail-modal').style.display = 'none';
-        });
+        document.getElementById('close-task-modal').addEventListener('click', () => closeModal('task-detail-modal'));
+        document.getElementById('task-edit-form').addEventListener('submit', (e) => this.handleFormSubmit(e));
+        document.getElementById('delete-task-btn').addEventListener('click', () => openModal('confirm-modal'));
+        document.getElementById('cancel-delete').addEventListener('click', () => closeModal('confirm-modal'));
+        document.getElementById('confirm-delete').addEventListener('click', () => this.deleteTask());
+    }
 
-        document.getElementById('task-edit-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.updateTask();
-        });
-
-        document.getElementById('delete-task-btn').addEventListener('click', () => {
-            document.getElementById('confirm-modal').style.display = 'flex';
-        });
-
-        document.getElementById('cancel-delete').addEventListener('click', () => {
-            document.getElementById('confirm-modal').style.display = 'none';
-        });
-
-        document.getElementById('confirm-delete').addEventListener('click', () => {
-            this.deleteTask();
-        });
-
+    setupTaskClickHandlers() {
         document.addEventListener('click', (e) => {
             const taskElement = e.target.closest('.task');
-            if (taskElement && !e.target.closest('.task-toggle, .task-edit, .task-delete')) {
-                this.openTaskModal(taskElement.dataset.taskId);
-                return;
-            }
+            if (!taskElement) return;
 
-            if (e.target.classList.contains('task-toggle')) {
+            const taskId = taskElement.dataset.taskId;
+            const targetClass = e.target.classList;
+
+            if (targetClass.contains('task-toggle')) {
                 e.stopPropagation();
-                const taskId = e.target.closest('.task').dataset.taskId;
                 this.toggleTaskDone(taskId);
-            }
-
-            if (e.target.classList.contains('task-edit')) {
+            } else if (targetClass.contains('task-edit')) {
                 e.stopPropagation();
-                const taskId = e.target.closest('.task').dataset.taskId;
                 this.openTaskModal(taskId);
-            }
-
-            if (e.target.classList.contains('task-delete')) {
+            } else if (targetClass.contains('task-delete')) {
                 e.stopPropagation();
-                const taskId = e.target.closest('.task').dataset.taskId;
                 this.prepareDeleteTask(taskId);
+            } else {
+                this.openTaskModal(taskId);
             }
         });
     }
 
     async openTaskModal(taskId) {
         try {
-            const response = await fetch(`/api/tasks/${taskId}/`);
-            if (response.ok) {
-                const task = await response.json();
-
-                document.getElementById('edit-task-id').value = task.id;
-                document.getElementById('edit-task-date').value = task.date;
-                document.getElementById('edit-task-title').value = task.title;
-                document.getElementById('edit-task-description').value = task.description || '';
-                document.getElementById('edit-task-done').checked = task.is_done;
-
-                document.getElementById('task-detail-modal').style.display = 'flex';
-            }
+            const task = await this.fetchTask(taskId);
+            this.populateTaskForm(task);
+            document.getElementById('task-detail-modal').style.display = 'flex';
         } catch (error) {
-            console.error('Error loading task:', error);
-            showNotification('Ошибка загрузки задачи', 'error');
+            this.handleError('Error loading task:', error, 'Ошибка загрузки задачи');
         }
     }
 
+    async fetchTask(taskId) {
+        const response = await fetch(`/api/tasks/${taskId}/`);
+        if (!response.ok) throw new Error('Task not found');
+        return await response.json();
+    }
+
+    populateTaskForm(task) {
+        document.getElementById('edit-task-id').value = task.id;
+        document.getElementById('edit-task-date').value = task.date;
+        document.getElementById('edit-task-title').value = task.title;
+        document.getElementById('edit-task-description').value = task.description || '';
+        document.getElementById('edit-task-done').checked = task.is_done;
+    }
+
+    handleFormSubmit(e) {
+        e.preventDefault();
+        this.updateTask();
+    }
+
     async updateTask() {
+        const taskData = this.getFormData();
+
+        try {
+            const updatedTask = await this.sendTaskUpdate(taskData);
+            this.updateTaskInDOM(updatedTask);
+            this.closeModalAndUpdateStats('task-detail-modal');
+            showNotification('Задача обновлена!', 'success');
+        } catch (error) {
+            this.handleError('Error updating task:', error, 'Ошибка обновления задачи');
+        }
+    }
+
+    getFormData() {
         const formData = new FormData(document.getElementById('task-edit-form'));
-        const taskData = {
+        return {
             id: formData.get('id'),
             title: formData.get('title'),
             description: formData.get('description'),
             date: formData.get('date'),
             is_done: formData.get('is_done') === 'on'
         };
+    }
 
-        try {
-            const response = await fetch(`/api/tasks/${taskData.id}/update/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCSRFToken()
-                },
-                body: JSON.stringify(taskData)
-            });
-
-            if (response.ok) {
-                const updatedTask = await response.json();
-                this.updateTaskInDOM(updatedTask);
-                document.getElementById('task-detail-modal').style.display = 'none';
-
-                this.updateDayStats(this.weekManager.getCurrentWeekDates());
-
-                showNotification('Задача обновлена!', 'success');
-            }
-        } catch (error) {
-            console.error('Error updating task:', error);
-            showNotification('Ошибка обновления задачи', 'error');
-        }
+    async sendTaskUpdate(taskData) {
+        const response = await fetch(`/api/tasks/${taskData.id}/update/`, {
+            method: 'POST',
+            headers: this.getRequestHeaders(),
+            body: JSON.stringify(taskData)
+        });
+        if (!response.ok) throw new Error('Update failed');
+        return await response.json();
     }
 
     prepareDeleteTask(taskId) {
-        // Сохраняем ID задачи для удаления и открываем окно подтверждения
         this.taskToDelete = taskId;
         document.getElementById('confirm-modal').style.display = 'flex';
     }
@@ -131,48 +124,69 @@ export class TaskManager {
         if (!this.taskToDelete) return;
 
         try {
-            const response = await fetch(`/api/tasks/${this.taskToDelete}/delete/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': this.getCSRFToken()
-                }
-            });
-
-            if (response.ok) {
-                this.removeTaskFromDOM(this.taskToDelete);
-                document.getElementById('task-detail-modal').style.display = 'none';
-                document.getElementById('confirm-modal').style.display = 'none';
-
-                // Обновляем статистику
-                const currentWeekDates = this.weekManager.getCurrentWeekDates();
-                this.updateDayStats(currentWeekDates);
-
-                showNotification('Задача удалена!', 'success');
-                this.taskToDelete = null;
-            }
+            await this.sendDeleteRequest(this.taskToDelete);
+            this.removeTaskFromDOM(this.taskToDelete);
+            this.closeModalAndUpdateStats('confirm-modal');
+            showNotification('Задача удалена!', 'success');
+            this.taskToDelete = null;
         } catch (error) {
-            console.error('Error deleting task:', error);
-            showNotification('Ошибка удаления задачи', 'error');
+            this.handleError('Error deleting task:', error, 'Ошибка удаления задачи');
+        }
+    }
+
+    async sendDeleteRequest(taskId) {
+        const response = await fetch(`/api/tasks/${taskId}/delete/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': this.getCSRFToken()}
+        });
+        if (!response.ok) throw new Error('Delete failed');
+    }
+
+    closeModalAndUpdateStats(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        document.getElementById('task-detail-modal').style.display = 'none';
+        this.updateStatistics();
+    }
+
+    updateStatistics() {
+        const currentWeekDates = this.weekManager.getCurrentWeekDates();
+        this.updateDayStats(currentWeekDates);
+        this.updateWeekStats();
+    }
+
+    async toggleTaskDone(taskId) {
+        try {
+            const task = await this.fetchTask(taskId);
+            const updatedTask = await this.sendTaskUpdate({...task, is_done: !task.is_done});
+            this.updateTaskInDOM(updatedTask);
+            this.updateStatistics();
+            showNotification('Задача обновлена!', 'success');
+        } catch (error) {
+            this.handleError('Error toggling task:', error, 'Ошибка обновления задачи');
         }
     }
 
     updateTaskInDOM(task) {
         const taskElement = document.querySelector(`.task[data-task-id="${task.id}"]`);
-        if (taskElement) {
-            taskElement.querySelector('.task-title').textContent = task.title;
-            taskElement.classList.toggle('done', task.is_done);
+        if (!taskElement) return;
 
-            const descriptionEl = taskElement.querySelector('.task-description');
-            if (task.description) {
-                if (!descriptionEl) {
-                    const descDiv = document.createElement('div');
-                    descDiv.className = 'task-description';
-                    taskElement.appendChild(descDiv);
-                }
-                descriptionEl.textContent = task.description;
-            } else if (descriptionEl) {
-                descriptionEl.remove();
+        taskElement.querySelector('.task-title').textContent = task.title;
+        taskElement.classList.toggle('done', task.is_done);
+        this.updateTaskDescription(taskElement, task.description);
+    }
+
+    updateTaskDescription(taskElement, description) {
+        let descriptionEl = taskElement.querySelector('.task-description');
+
+        if (description) {
+            if (!descriptionEl) {
+                descriptionEl = document.createElement('div');
+                descriptionEl.className = 'task-description';
+                taskElement.appendChild(descriptionEl);
             }
+            descriptionEl.textContent = description;
+        } else if (descriptionEl) {
+            descriptionEl.remove();
         }
     }
 
@@ -184,60 +198,104 @@ export class TaskManager {
         }
     }
 
-    extractTasksFromDOM() {
-        const tasks = [];
-        document.querySelectorAll('.task').forEach(taskElement => {
-            const taskId = taskElement.dataset.taskId;
-            const dayCard = taskElement.closest('.day-card');
-            const dateStr = dayCard.querySelector('.add-task-btn')?.dataset.date;
-
-            if (dateStr) {
-                tasks.push({
-                    id: taskId,
-                    date: new Date(dateStr),
-                    element: taskElement,
-                    dayCard: dayCard
-                });
-            }
-        });
-        return tasks;
+    getRequestHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': this.getCSRFToken()
+        };
     }
 
-    filterTasksForWeek(weekDates) {
-        const dateStrings = weekDates.map(date => date.toISOString().split('T')[0]);
+    getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
 
-        this.allTasks.forEach(task => {
-            const taskDateStr = task.date.toISOString().split('T')[0];
-            const shouldShow = dateStrings.includes(taskDateStr);
+    handleError(consoleMsg, error, userMsg) {
+        console.error(consoleMsg, error);
+        showNotification(userMsg, 'error');
+    }
 
-            task.element.style.display = shouldShow ? 'block' : 'none';
-        });
+    extractTasksFromDOM() {
+        return Array.from(document.querySelectorAll('.task')).map(taskElement => {
+            const dateStr = taskElement.closest('.day-card')?.querySelector('.add-task-btn')?.dataset.date;
+            return dateStr ? {
+                id: taskElement.dataset.taskId,
+                date: new Date(dateStr),
+                element: taskElement,
+                dayCard: taskElement.closest('.day-card')
+            } : null;
+        }).filter(Boolean);
+    }
 
-        this.updateDayStats(weekDates);
+    displayTasksForWeek(tasks, weekDates) {
+        this.allTasks = [];
+        document.querySelectorAll('.task').forEach(task => task.remove());
+
+        tasks.forEach(task => this.addTaskToDOM(task));
+        this.updateStatistics();
+    }
+
+    addTaskToDOM(task) {
+        const taskElement = this.createTaskElement(task);
+        const dayCard = this.findDayCardByDate(task.date);
+
+        if (dayCard) {
+            dayCard.querySelector('.task-list').appendChild(taskElement);
+            this.allTasks.push({
+                id: task.id,
+                date: new Date(task.date),
+                element: taskElement
+            });
+        }
+    }
+
+    createTaskElement(task) {
+        const li = document.createElement('li');
+        li.className = `task ${task.is_done ? 'done' : ''}`;
+        li.dataset.taskId = task.id;
+        li.innerHTML = `
+            <div class="task-main">
+                <span class="task-title">${task.title}</span>
+                <div class="task-actions">
+                    <button class="task-toggle">✓</button>
+                    <button class="task-edit">✎</button>
+                    <button class="task-delete">×</button>
+                </div>
+            </div>
+            ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+        `;
+        return li;
+    }
+
+    findDayCardByDate(dateString) {
+        return document.querySelector(`.add-task-btn[data-date="${dateString}"]`)?.closest('.day-card');
     }
 
     updateDayStats(weekDates) {
         const dateStrings = weekDates.map(date => date.toISOString().split('T')[0]);
-        const dayCards = document.querySelectorAll('.day-card');
 
         dateStrings.forEach((dateStr, index) => {
-            if (dayCards[index]) {
-                const taskList = dayCards[index].querySelector('.task-list');
-                const tasks = taskList.querySelectorAll('.task');
-                const doneTasks = taskList.querySelectorAll('.task.done');
+            const dayCard = document.querySelectorAll('.day-card')[index];
+            if (!dayCard) return;
 
-                const pointsElement = dayCards[index].querySelector('.points');
-                if (pointsElement) {
-                    if (tasks.length > 0)
-                        pointsElement.textContent =
-                            `${doneTasks.length} / ${tasks.length} задач`;
-                    else {
-                        pointsElement.textContent =
-                            `Задач нет`;
-                    }
-                }
+            const taskList = dayCard.querySelector('.task-list');
+            const tasks = taskList?.querySelectorAll('.task') || [];
+            const doneTasks = taskList?.querySelectorAll('.task.done') || [];
+            const pointsElement = dayCard.querySelector('.points');
+
+            if (pointsElement) {
+                pointsElement.textContent = tasks.length > 0
+                    ? `${doneTasks.length} / ${tasks.length} задач`
+                    : `Задач нет`;
             }
         });
+    }
+
+    updateWeekStats() {
+        const weekStatsElement = document.querySelector('.week-stats .points');
+        if (weekStatsElement) {
+            const doneTasksCount = document.querySelectorAll('.task.done').length;
+            weekStatsElement.textContent = `${doneTasksCount} баллов`;
+        }
     }
 
     setupModalListeners() {
@@ -247,20 +305,15 @@ export class TaskManager {
 
         document.querySelectorAll('.add-task-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const date = e.target.dataset.date;
-                document.getElementById('task-date').value = date;
+                document.getElementById('task-date').value = e.target.dataset.date;
                 modal.style.display = 'flex';
             });
         });
 
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
+        closeBtn.addEventListener('click', () => modal.style.display = 'none');
 
         window.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
+            if (e.target === modal) modal.style.display = 'none';
         });
 
         form.addEventListener('submit', (e) => {
@@ -279,34 +332,25 @@ export class TaskManager {
         };
 
         try {
-            const response = await fetch('/api/tasks/create/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCSRFToken()
-                },
-                body: JSON.stringify(taskData)
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                this.updateTasksForDate(result.tasks, taskData.date);
-
-                // После добавления задачи обновляем фильтрацию по текущей неделе
-                const currentWeekDates = this.weekManager.getCurrentWeekDates();
-                this.filterTasksForWeek(currentWeekDates);
-
-                document.getElementById('task-modal').style.display = 'none';
-                document.getElementById('task-form').reset();
-                showNotification('Задача успешно создана!', 'success');
-            } else {
-                const error = await response.json();
-                showNotification(`Ошибка: ${error.error}`, 'error');
-            }
+            const result = await this.sendCreateTask(taskData);
+            this.updateTasksForDate(result.tasks, taskData.date);
+            this.filterTasksForWeek(this.weekManager.getCurrentWeekDates());
+            document.getElementById('task-modal').style.display = 'none';
+            document.getElementById('task-form').reset();
+            showNotification('Задача успешно создана!', 'success');
         } catch (error) {
-            console.error('Error creating task:', error);
-            showNotification('Ошибка создания задачи', 'error');
+            this.handleError('Error creating task:', error, 'Ошибка создания задачи');
         }
+    }
+
+    async sendCreateTask(taskData) {
+        const response = await fetch('/api/tasks/create/', {
+            method: 'POST',
+            headers: this.getRequestHeaders(),
+            body: JSON.stringify(taskData)
+        });
+        if (!response.ok) throw new Error('Create failed');
+        return await response.json();
     }
 
     updateTasksForDate(tasks, dateString) {
@@ -315,103 +359,18 @@ export class TaskManager {
 
         const taskList = dayCard.querySelector('.task-list');
         taskList.innerHTML = '';
-
-        tasks.forEach(task => {
-            const taskElement = this.createTaskElement(task);
-            taskList.appendChild(taskElement);
-        });
-
+        tasks.forEach(task => taskList.appendChild(this.createTaskElement(task)));
         this.allTasks = this.extractTasksFromDOM();
     }
 
+    filterTasksForWeek(weekDates) {
+        const dateStrings = weekDates.map(date => date.toISOString().split('T')[0]);
 
-    getCSRFToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]').value;
-    }
-
-    addTaskToDOM(task) {
-        const taskElement = this.createTaskElement(task);
-        const dayCard = this.findDayCardByDate(task.date);
-
-        if (dayCard) {
-            const taskList = dayCard.querySelector('.task-list');
-            taskList.appendChild(taskElement);
-            this.allTasks.push({
-                id: task.id,
-                date: new Date(task.date),
-                element: taskElement
-            });
-        }
-    }
-
-    createTaskElement(task) {
-        const li = document.createElement('li');
-        li.className = `task ${task.is_done ? 'done' : ''}`;
-        li.dataset.taskId = task.id;
-        li.innerHTML = `
-        <div class="task-main">
-            <span class="task-title">${task.title}</span>
-            <div class="task-actions">
-                <button class="task-toggle">✓</button>
-                <button class="task-edit">✎</button>
-                <button class="task-delete">×</button>
-            </div>
-        </div>
-        ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
-    `;
-        return li;
-    }
-
-    findDayCardByDate(dateString) {
-        return document.querySelector(`.add-task-btn[data-date="${dateString}"]`)?.closest('.day-card');
-    }
-
-    displayTasksForWeek(tasks, weekDates) {
-        // Очищаем только задачи, сохраняя структуру дней
-        document.querySelectorAll('.task').forEach(task => task.remove());
-
-        // Добавляем новые задачи
-        tasks.forEach(task => {
-            this.addTaskToDOM(task);
+        this.allTasks.forEach(task => {
+            const taskDateStr = task.date.toISOString().split('T')[0];
+            task.element.style.display = dateStrings.includes(taskDateStr) ? 'block' : 'none';
         });
 
-        // Обновляем статистику
         this.updateDayStats(weekDates);
-    }
-
-    async toggleTaskDone(taskId) {
-        try {
-            const response = await fetch(`/api/tasks/${taskId}/`);
-            if (response.ok) {
-                const task = await response.json();
-
-                const updatedTask = {
-                    ...task,
-                    is_done: !task.is_done
-                };
-
-                const updateResponse = await fetch(`/api/tasks/${taskId}/update/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': this.getCSRFToken()
-                    },
-                    body: JSON.stringify(updatedTask)
-                });
-
-                if (updateResponse.ok) {
-                    const result = await updateResponse.json();
-                    this.updateTaskInDOM(result);
-
-                    const currentWeekDates = this.weekManager.getCurrentWeekDates();
-                    this.updateDayStats(currentWeekDates);
-
-                    showNotification('Задача обновлена!', 'success');
-                }
-            }
-        } catch (error) {
-            console.error('Error toggling task:', error);
-            showNotification('Ошибка обновления задачи', 'error');
-        }
     }
 }
