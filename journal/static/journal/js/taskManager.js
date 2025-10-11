@@ -6,6 +6,8 @@ export class TaskManager {
         this.allTasks = this.extractTasksFromDOM();
         this.setupModalListeners();
         this.setupTaskListeners();
+
+        console.log("daily task manager initialized")
     }
 
     setupTaskListeners() {
@@ -250,18 +252,18 @@ export class TaskManager {
 
     createTaskElement(task) {
         const li = document.createElement('li');
-        li.className = `task ${task.is_done ? 'done' : ''}`;
+        li.className = `task general-task ${task.is_done ? 'done' : ''}`;
         li.dataset.taskId = task.id;
         li.innerHTML = `
-            <div class="task-main">
-                <span class="task-title">${task.title}</span>
-                <div class="task-actions">
-                    <button class="task-toggle">✓</button>
-                    <button class="task-edit">✎</button>
-                    <button class="task-delete">×</button>
+            <div class="task-main general-task-main">
+                <span class="task-title general-task-title">${task.title}</span>
+                <div class="task-actions general-task-actions">
+                    <button class="task-toggle task-toggle-btn">✓</button>
+                    <button class="task-edit  task-edit-btn">✎</button>
+                    <button class="task-delete  task-delete-btn">×</button>
                 </div>
             </div>
-            ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+            ${task.description ? `<div class="task-description general-task-description">${task.description}</div>` : ''}
         `;
         return li;
     }

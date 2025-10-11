@@ -63,12 +63,66 @@
                     {% endfor %}
                 </div>
 
-                <div class="misc-colu"></div>
-            </div>
+                <div class="misc-column">
+                    <!-- Секция недельных задач -->
+                    <div class="weekly-tasks-section">
+                        <div class="section-header">
+                            <h3>Задачи недели</h3>
+                            <button class="add-weekly-task-btn weekly-add-btn"
+                                    data-week-start="{{ week_start|date:'Y-m-d' }}">+
+                            </button>
+                        </div>
 
+                        <ul class="weekly-task-list">
+                            {% for task in weekly_tasks %}
+                                <li class="weekly-task {% if task.is_done %}done{% endif %}"
+                                    data-task-id="{{ task.id }}" data-task-type="weekly">
+                                    <div class="weekly-task-main">
+                                        <span class="task-title">{{ task.title }}</span>
+                                        <div class="weekly-task-actions">
+                                            <button class="weekly-task-toggle task-toggle-btn"
+                                                    title="Отметить выполненной">✓
+                                            </button>
+                                            <button class="weekly-task-edit task-edit-btn" title="Редактировать">✎
+                                            </button>
+                                            <button class="weekly-task-delete task-delete-btn" title="Удалить">×
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% if task.description %}
+                                        <div class="weekly-task-description">{{ task.description }}</div>
+                                    {% endif %}
+                                </li>
+                            {% empty %}
+                                <li class="no-tasks">Нет задач на неделю</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Заглушки для будущих секций -->
+                    <div class="misc-section">
+                        <div class="section-header">
+                            <h3>Секция 2</h3>
+                        </div>
+                        <div class="section-content">
+                            <p>Содержимое второй секции</p>
+                        </div>
+                    </div>
+
+                    <div class="misc-section">
+                        <div class="section-header">
+                            <h3>Секция 3</h3>
+                        </div>
+                        <div class="section-content">
+                            <p>Содержимое третьей секции</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Модальное окно для дневных задач -->
     <div id="task-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -88,12 +142,36 @@
         </div>
     </div>
 
+    <!-- Модальное окно для недельных задач -->
+    <!-- Модальное окно для недельных задач -->
+    <div id="weekly-task-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 class="modal-title">Добавить задачу на неделю</h3>
+            <form id="weekly-task-form">
+                <!-- Это поле будет заполняться JavaScript при открытии модалки -->
+                <input type="hidden" id="weekly-task-week-start" name="week_start">
+                <div class="form-group">
+                    <label for="weekly-task-title">Название:</label>
+                    <input type="text" id="weekly-task-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="weekly-task-description">Описание:</label>
+                    <textarea id="weekly-task-description" name="description"></textarea>
+                </div>
+                <button type="submit" class="styled-button">Добавить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования для дневных задач -->
     <div id="task-detail-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close" id="close-task-modal">&times;</span>
             <h3 class="modal-title">Редактирование задачи</h3>
             <form id="task-edit-form">
                 <input type="hidden" id="edit-task-id" name="id">
+                <input type="hidden" id="edit-task-type" name="task_type">
                 <input type="hidden" id="edit-task-date" name="date">
 
                 <div class="form-group">
@@ -121,6 +199,42 @@
         </div>
     </div>
 
+    <!-- Модальное окно редактирования для недельных задач -->
+    <div id="weekly-task-detail-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" id="close-weekly-task-modal">&times;</span>
+            <h3 class="modal-title">Редактирование недельной задачи</h3>
+            <form id="weekly-task-edit-form">
+                <input type="hidden" id="edit-weekly-task-id" name="id">
+                <input type="hidden" id="edit-weekly-task-type" name="task_type" value="weekly">
+                <input type="hidden" id="edit-weekly-task-week-start" name="week_start">
+
+                <div class="form-group">
+                    <label for="edit-weekly-task-title">Название:</label>
+                    <input type="text" id="edit-weekly-task-title" name="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-weekly-task-description">Описание:</label>
+                    <textarea id="edit-weekly-task-description" name="description"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="edit-weekly-task-done" name="is_done">
+                        <span>Выполнена</span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="danger-button" id="delete-weekly-task-btn">Удалить</button>
+                    <button type="submit" class="styled-button">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления для дневных задач -->
     <div id="confirm-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <h3>Подтверждение удаления</h3>
@@ -128,6 +242,18 @@
             <div class="form-actions">
                 <button type="button" class="nav-button" id="cancel-delete">Отмена</button>
                 <button type="button" class="danger-button" id="confirm-delete">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления для недельных задач -->
+    <div id="weekly-confirm-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Подтверждение удаления</h3>
+            <p>Вы уверены, что хотите удалить эту недельную задачу?</p>
+            <div class="form-actions">
+                <button type="button" class="nav-button" id="cancel-weekly-delete">Отмена</button>
+                <button type="button" class="danger-button" id="confirm-weekly-delete">Удалить</button>
             </div>
         </div>
     </div>

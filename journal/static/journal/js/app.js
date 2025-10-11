@@ -1,10 +1,14 @@
 import {WeekManager} from './weekManager.js';
 import {TaskManager} from './taskManager.js';
+import {WeeklyTaskManager} from "./weeklyTaskManager.js";
 
 class DailyPlannerApp {
     constructor() {
         this.weekManager = new WeekManager();
+
         this.taskManager = new TaskManager(this.weekManager);
+        this.weeklyTaskManager = new WeeklyTaskManager(this.weekManager);
+
         this.setupEventListeners();
         this.init();
     }
@@ -52,6 +56,11 @@ class DailyPlannerApp {
         // Загружаем задачи для текущей недели
         const tasks = await this.weekManager.loadWeekTasks(this.weekManager.currentWeekOffset);
         this.taskManager.displayTasksForWeek(tasks, currentWeekDates);
+        console.log(tasks)
+
+        const weeklyTasks = await this.weekManager.loadWeeklyTasks(this.weekManager.currentWeekOffset);
+        console.log(weeklyTasks)
+        this.weeklyTaskManager.displayTasksForWeek(weeklyTasks, currentWeekDates);
     }
 }
 

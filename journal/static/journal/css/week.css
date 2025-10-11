@@ -81,7 +81,8 @@ li {
     gap: 10px;
 }
 
-.add-task-btn {
+.add-task-btn,
+.weekly-add-btn {
     background: var(--success);
     color: white;
     border: none;
@@ -94,11 +95,12 @@ li {
     margin-left: 10px;
 }
 
-.add-task-btn:hover {
+.add-task-btn:hover,
+.weekly-add-btn:hover {
     background: var(--primary-hover);
 }
 
-.task {
+.general-task {
     padding: 10px;
     flex-grow: 1;
     border-radius: 4px;
@@ -106,31 +108,31 @@ li {
     border-left: 3px solid var(--success);
 }
 
-.task.done {
+.general-task.done {
     opacity: 0.7;
     border-left-color: var(--text-secondary);
 }
 
-.task-main {
+.general-task-main {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.task-title {
+.general-task-title {
     flex-grow: 1;
 }
 
-.task.done .task-title {
+.general-task.done .general-task-title {
     text-decoration: line-through;
 }
 
-.task-actions {
+.general-task-actions {
     display: flex;
     gap: 5px;
 }
 
-.task-toggle, .task-edit, .task-delete {
+.task-toggle-btn, .task-edit-btn, .task-delete-btn {
     background: none;
     border: none;
     cursor: pointer;
@@ -138,19 +140,19 @@ li {
     padding: 2px 5px;
 }
 
-.task-toggle {
+.task-toggle-btn {
     color: var(--success);
 }
 
-.task-edit {
+.task-edit-btn {
     color: var(--primary);
 }
 
-.task-delete {
+.task-delete-btn {
     color: var(--danger);
 }
 
-.task-description {
+.general-task-description {
     margin-top: 5px;
     padding-top: 5px;
     border-top: 1px dashed var(--border-color);
@@ -281,4 +283,93 @@ li {
     flex: 1;
     color: var(--text-primary);
     font-weight: 500;
+}
+
+/* Правая колонка с дополнительными секциями */
+.misc-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 50%;
+    max-height: 70vh;
+}
+
+.weekly-tasks-section,
+.misc-section {
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    flex: 1;
+    min-height: 0; /* Для правильного распределения пространства */
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h3 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.weekly-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+}
+
+.weekly-task {
+    border-left: 3px solid var(--second-primary);
+}
+
+.weekly-task.done {
+    border-left-color: var(--text-secondary);
+}
+
+.no-tasks {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+}
+
+.section-content {
+    height: calc(100% - 40px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .week-content {
+        flex-direction: column;
+    }
+
+    .days-column,
+    .misc-column {
+        width: 100%;
+        max-height: none;
+    }
+
+    .misc-column {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .weekly-tasks-section,
+    .misc-section {
+        flex: 1 1 300px;
+        min-height: 200px;
+    }
 }
