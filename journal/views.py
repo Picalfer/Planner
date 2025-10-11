@@ -1,16 +1,37 @@
 import json
 from datetime import timedelta
 
+from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.views.generic import CreateView
 from django.views.generic import TemplateView
 
+from .forms import CustomRegisterForm
 from .models import DailyTask, WeeklyTask
+
+
+class CustomRegisterView(CreateView):
+    template_name = 'journal/register.html'
+    form_class = CustomRegisterForm
+    success_url = reverse_lazy('week')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(self.success_url)
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        # Автоматически логиним пользователя после регистрации
+        login(self.request, self.object)
+        return response
 
 
 class CustomLoginView(LoginView):

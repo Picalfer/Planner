@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'journal/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="login-page">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1>Создать аккаунт</h1>
+                    <p>Присоединяйтесь к нашему планировщику</p>
+                </div>
+
+                <form method="post" class="login-form">
+                    {% csrf_token %}
+
+                    <!-- Поле username с иконкой -->
+                    <div class="form-group">
+                        <label for="id_username" class="form-label">
+                            <i class="fas fa-user"></i>
+                            Имя пользователя
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="error-message">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле email с иконкой -->
+                    <div class="form-group">
+                        <label for="id_email" class="form-label">
+                            <i class="fas fa-envelope"></i>
+                            Email адрес
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="error-message">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле password1 с иконкой -->
+                    <div class="form-group">
+                        <label for="id_password1" class="form-label">
+                            <i class="fas fa-lock"></i>
+                            Пароль
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <div class="error-message">{{ form.password1.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле password2 с иконкой -->
+                    <div class="form-group">
+                        <label for="id_password2" class="form-label">
+                            <i class="fas fa-lock"></i>
+                            Подтверждение пароля
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="error-message">{{ form.password2.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="non-field-errors">
+                            {% for error in form.non_field_errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <button type="submit" class="login-button">
+                        <span class="button-text">Зарегистрироваться</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    <p>Уже есть аккаунт? <a href="{% url 'login' %}" class="register-link">Войти</a></p>
+                </div>
+            </div>
+
+            <div class="login-decoration">
+                <div class="decoration-content">
+                    <div class="app-logo">
+                        <i class="logo-icon">📅</i>
+                        <span class="app-name">WeeklyPlanner</span>
+                    </div>
+                    <div class="decoration-text">
+                        <h3>Начните планировать сегодня</h3>
+                        <p>Присоединяйтесь к сообществу организованных людей</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
