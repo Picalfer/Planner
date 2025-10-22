@@ -7,7 +7,7 @@ class DailyPlannerApp {
         this.weekManager = new WeekManager();
 
         this.taskManager = new TaskManager(this.weekManager);
-        this.weeklyTaskManager = new WeeklyTaskManager(this.weekManager);
+        //this.weeklyTaskManager = new WeeklyTaskManager(this.weekManager);
 
         this.setupEventListeners();
         this.init();
@@ -58,9 +58,9 @@ class DailyPlannerApp {
         this.taskManager.displayTasksForWeek(tasks, currentWeekDates);
         console.log(tasks)
 
-        const weeklyTasks = await this.weekManager.loadWeeklyTasks(this.weekManager.currentWeekOffset);
-        console.log(weeklyTasks)
-        this.weeklyTaskManager.displayTasksForWeek(weeklyTasks, currentWeekDates);
+        //const weeklyTasks = await this.weekManager.loadWeeklyTasks(this.weekManager.currentWeekOffset);
+        //console.log(weeklyTasks)
+        //this.weeklyTaskManager.displayTasksForWeek(weeklyTasks, currentWeekDates);
     }
 }
 
