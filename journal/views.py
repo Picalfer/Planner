@@ -167,6 +167,54 @@ def get_task(request, task_id):
         return JsonResponse({'error': str(e)}, status=400)
 
 
+@csrf_exempt
+@require_POST
+def update_task(request, task_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Требуется авторизация'}, status=401)
+
+    try:
+        task = Task.objects.get(id=task_id, user=request.user)
+        data = json.loads(request.body)
+
+        task.title = data.get('title', task.title)
+        task.description = data.get('description', task.description)
+        task.is_done = data.get('is_done', task.is_done)
+        task.is_weekly = data.get('is_weekly', task.is_weekly)
+        task.save()
+
+        return JsonResponse({
+            'id': task.id,
+            'title': task.title,
+            'description': task.description,
+            'date': task.date.isoformat(),
+            'is_done': task.is_done,
+            'is_weekly': task.is_weekly
+        })
+
+    except Task.DoesNotExist:
+        return JsonResponse({'error': 'Задача не найдена'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@csrf_exempt
+@require_POST
+def delete_task(request, task_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Требуется авторизация'}, status=401)
+
+    try:
+        task = Task.objects.get(id=task_id, user=request.user)
+        task.delete()
+        return JsonResponse({'status': 'deleted'})
+
+    except Task.DoesNotExist:
+        return JsonResponse({'error': 'Задача не найдена'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
 """
 # Helper function to get week range
 def get_week_range(week_offset=0):
