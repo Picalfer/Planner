@@ -120,10 +120,10 @@ def create_task(request):
             date=data['date'],
             is_done=data.get('is_done', False),
             is_weekly=data.get('is_weekly', False),
-            #TODO это надо присылать с фронтенда, сейчас это не присылается
+            # TODO это надо присылать с фронтенда, сейчас это не присылается
         )
 
-        #TODO так же если задача недельная, то получить возможно надо недельные задачи
+        # TODO так же если задача недельная, то получить возможно надо недельные задачи
         # Получаем все задачи на эту дату
         tasks = Task.objects.filter(date=data['date'], user=request.user)
         tasks_data = [{
@@ -142,6 +142,27 @@ def create_task(request):
 
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Неверный JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@csrf_exempt
+def get_task(request, task_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Требуется авторизация'}, status=401)
+
+    try:
+        task = Task.objects.get(id=task_id, user=request.user)
+        return JsonResponse({
+            'id': task.id,
+            'title': task.title,
+            'description': task.description,
+            'date': task.date.isoformat(),
+            'is_done': task.is_done,
+            'is_weekly': task.is_weekly
+        })
+    except Task.DoesNotExist:
+        return JsonResponse({'error': 'Задача не найдена'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
