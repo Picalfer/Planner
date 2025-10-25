@@ -15,7 +15,8 @@ class DailyPlannerApp {
 
     init() {
         console.log("Daily Planner initialized");
-        this.updateDisplay();
+        //this.updateDisplay();
+        // TODO определить когда отрисовываться будет контекстом, а когда через запрос к апи через s
     }
 
     setupEventListeners() {

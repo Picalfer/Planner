@@ -259,8 +259,8 @@ export class TaskManager {
                 <span class="task-title general-task-title">${task.title}</span>
                 <div class="task-actions general-task-actions">
                     <button class="task-toggle task-toggle-btn">✓</button>
-                    <button class="task-edit  task-edit-btn">✎</button>
-                    <button class="task-delete  task-delete-btn">×</button>
+                    <button class="task-edit task-edit-btn">✎</button>
+                    <button class="task-delete task-delete-btn">×</button>
                 </div>
             </div>
             ${task.description ? `<div class="task-description general-task-description">${task.description}</div>` : ''}

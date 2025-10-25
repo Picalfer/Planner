@@ -1,6 +1,6 @@
 import json
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,8 +17,8 @@ from django.views.generic import TemplateView
 from .forms import CustomRegisterForm
 from .models import Task
 
-
 logger = logging.getLogger(__name__)
+
 
 class CustomRegisterView(CreateView):
     template_name = 'journal/register.html'
@@ -96,6 +96,55 @@ class WeekView(LoginRequiredMixin, TemplateView):
 
         logger.debug(f"Context for week page:\n{context}")
         return context
+
+
+@csrf_exempt
+@require_POST
+def create_task(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Требуется авторизация'}, status=401)
+
+    try:
+        data = json.loads(request.body)
+
+        if not data.get('title'):
+            return JsonResponse({'error': 'Название задачи обязательно'}, status=400)
+
+        if not data.get('date'):
+            return JsonResponse({'error': 'Дата задачи обязательна'}, status=400)
+
+        task = Task.objects.create(
+            user=request.user,
+            title=data['title'],
+            description=data.get('description', ''),
+            date=data['date'],
+            is_done=data.get('is_done', False),
+            is_weekly=data.get('is_weekly', False),
+            #TODO это надо присылать с фронтенда, сейчас это не присылается
+        )
+
+        #TODO так же если задача недельная, то получить возможно надо недельные задачи
+        # Получаем все задачи на эту дату
+        tasks = Task.objects.filter(date=data['date'], user=request.user)
+        tasks_data = [{
+            'id': t.id,
+            'title': t.title,
+            'description': t.description,
+            'date': t.date.isoformat(),
+            'is_done': t.is_done,
+            'is_weekly': t.is_weekly
+        } for t in tasks]
+
+        return JsonResponse({
+            'tasks': tasks_data,
+            'new_task_id': task.id
+        }, status=201)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Неверный JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
 
 """
 # Helper function to get week range

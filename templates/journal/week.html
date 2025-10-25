@@ -44,17 +44,17 @@
 
                             <ul class="task-list">
                                 {% for task in day.tasks.all %}
-                                    <li class="task {% if task.is_done %}done{% endif %}" data-task-id="{{ task.id }}">
-                                        <div class="task-main">
-                                            <span class="task-title">{{ task.title }}</span>
-                                            <div class="task-actions">
-                                                <button class="task-toggle" title="Отметить выполненной">✓</button>
-                                                <button class="task-edit" title="Редактировать">✎</button>
-                                                <button class="task-delete" title="Удалить">×</button>
+                                    <li class="task general-task {% if task.is_done %}done{% endif %}" data-task-id="{{ task.id }}">
+                                        <div class="task-main general-task-main">
+                                            <span class="task-title general-task-title">{{ task.title }}</span>
+                                            <div class="task-actions general-task-actions">
+                                                <button class="task-toggle task-toggle-btn" title="Отметить выполненной">✓</button>
+                                                <button class="task-edit task-edit-btn" title="Редактировать">✎</button>
+                                                <button class="task-delete task-delete-btn" title="Удалить">×</button>
                                             </div>
                                         </div>
                                         {% if task.description %}
-                                            <div class="task-description">{{ task.description }}</div>
+                                            <div class="task-description general-task-description">{{ task.description }}</div>
                                         {% endif %}
                                     </li>
                                 {% endfor %}
