@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+import logging
 
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,8 +15,10 @@ from django.views.generic import CreateView
 from django.views.generic import TemplateView
 
 from .forms import CustomRegisterForm
-from .models import DailyTask, WeeklyTask
+from .models import Task
 
+
+logger = logging.getLogger(__name__)
 
 class CustomRegisterView(CreateView):
     template_name = 'journal/register.html'
@@ -60,9 +63,10 @@ class WeekView(LoginRequiredMixin, TemplateView):
 
         for i in range(7):
             date = start_date + timedelta(days=i)
-            day_tasks = DailyTask.objects.filter(
+            day_tasks = Task.objects.filter(
                 user=self.request.user,
-                date=date
+                date=date,
+                is_weekly=False
             )
 
             days.append({
@@ -74,9 +78,9 @@ class WeekView(LoginRequiredMixin, TemplateView):
             })
 
         # Get weekly tasks for current week
-        weekly_tasks = WeeklyTask.objects.filter(
+        weekly_tasks = Task.objects.filter(
             user=self.request.user,
-            week_start=start_date
+            is_weekly=True
         )
 
         context['days'] = days
@@ -84,22 +88,22 @@ class WeekView(LoginRequiredMixin, TemplateView):
         context['week_start'] = start_date
         context['week_end'] = start_date + timedelta(days=6)
         context['week_number'] = start_date.isocalendar()[1]
-        context['total_points'] = DailyTask.objects.filter(
+        context['total_points'] = Task.objects.filter(
             user=self.request.user,
             date__range=[start_date, start_date + timedelta(days=6)],
             is_done=True
         ).count()
 
+        logger.debug(f"Context for week page:\n{context}")
         return context
 
-
+"""
 # Helper function to get week range
 def get_week_range(week_offset=0):
     today = timezone.now().date()
     start_date = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
     end_date = start_date + timedelta(days=6)
     return start_date, end_date
-
 
 # Daily DailyTasks API
 @csrf_exempt
@@ -545,3 +549,5 @@ def delete_task(request, task_id):
         return JsonResponse({'error': 'Задача не найдена'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+"""
