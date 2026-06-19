@@ -253,6 +253,12 @@ class ScheduleManager {
             sectionDiv.appendChild(itemsContainer);
             container.appendChild(sectionDiv);
 
+            // Внутри renderSections, после создания headerRow:
+const removeSectionBtn = headerRow.querySelector('.remove-section-btn');
+removeSectionBtn.addEventListener('click', () => {
+    this.deleteSection(section.id, sectionDiv);
+});
+
             // Обработчик добавления пункта в эту секцию
             headerRow.querySelector('.add-item-to-section-btn').addEventListener('click', () => {
                 this.addItemToSection(sectionDiv);
@@ -614,6 +620,32 @@ class ScheduleManager {
             showNotification('Ошибка', 'error');
         }
     }
+
+    async deleteSection(sectionId, sectionDiv) {
+    if (!confirm('Удалить эту секцию со всеми пунктами?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/schedule/sections/${sectionId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': this.getCSRFToken()
+            }
+        });
+
+        if (response.ok) {
+            // Удаляем секцию из DOM
+            sectionDiv.remove();
+            showNotification('Секция удалена', 'success');
+        } else {
+            showNotification('Ошибка при удалении', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting section:', error);
+        showNotification('Ошибка', 'error');
+    }
+}
 
     getCSRFToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]').value;

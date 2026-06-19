@@ -175,7 +175,11 @@ def schedule_update_items(request, template_id):
 
     return JsonResponse({'success': True})
 
-
+@login_required
+def schedule_delete_section(request, section_id):
+    section = ScheduleSection.objects.get(id=section_id)
+    section.delete()
+    return JsonResponse({'success': True})
 @login_required
 def schedule_update_section(request, section_id):
     section = ScheduleSection.objects.get(id=section_id)

@@ -68,4 +68,5 @@ path('api/schedule/templates/<int:template_id>/sections/', views.schedule_sectio
 path('api/schedule/sections/<int:section_id>/items/', views.schedule_section_items, name='schedule_section_items'),
 path('api/schedule/sections/create/', views.schedule_create_section, name='schedule_create_section'),
 path('api/schedule/sections/<int:section_id>/update/', views.schedule_update_section, name='schedule_update_section'),
+path('api/schedule/sections/<int:section_id>/delete/', views.schedule_delete_section, name='schedule_delete_section'),
     ]
