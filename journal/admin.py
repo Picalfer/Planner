@@ -1,4 +1,3 @@
-# Register your models here.
 from django.contrib import admin
 
 from .models import UserProfile, Task
@@ -104,8 +103,8 @@ class ScheduleTemplateAdmin(admin.ModelAdmin):
 
 @admin.register(ScheduleItem)
 class ScheduleItemAdmin(admin.ModelAdmin):
-    list_display = ['template', 'time', 'title', 'order']
-    list_filter = ['template']
+    list_display = ['time', 'title', 'order']
+    list_filter = []
 
 @admin.register(DailySchedule)
 class DailyScheduleAdmin(admin.ModelAdmin):

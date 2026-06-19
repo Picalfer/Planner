@@ -213,22 +213,33 @@ class ScheduleTemplate(models.Model):
     def __str__(self):
         return self.name
 
-
-class ScheduleItem(models.Model):
-    template = models.ForeignKey(ScheduleTemplate, on_delete=models.CASCADE, related_name='items')
-    time = models.CharField(max_length=10, verbose_name="Время (например, 09:00)")
-    title = models.CharField(max_length=200, verbose_name="Название")
-    description = models.TextField(blank=True, null=True, verbose_name="Описание")
+class ScheduleSection(models.Model):
+    template = models.ForeignKey(ScheduleTemplate, on_delete=models.CASCADE, related_name='sections')
+    title = models.CharField(max_length=200, verbose_name="Название секции")
+    icon = models.CharField(max_length=10, blank=True, null=True, verbose_name="Иконка (эмодзи)")
     order = models.IntegerField(default=0, verbose_name="Порядок")
 
     class Meta:
-        ordering = ['order', 'time']
-        verbose_name = "Пункт расписания"
-        verbose_name_plural = "Пункты расписания"
+        ordering = ['order']
 
     def __str__(self):
-        return f"{self.time} - {self.title}"
+        return f"{self.template.name} - {self.title}"
 
+
+
+class ScheduleItem(models.Model):
+    section = models.ForeignKey(ScheduleSection, on_delete=models.CASCADE, related_name='items')
+    time = models.CharField(max_length=10, blank=True, null=True, verbose_name="Время (опционально)")
+    title = models.CharField(max_length=200, verbose_name="Название")
+    description = models.TextField(blank=True, null=True, verbose_name="Описание")
+    order = models.IntegerField(default=0, verbose_name="Порядок")
+    is_info = models.BooleanField(default=False, verbose_name="Информационный блок (без чекбокса)")
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.time or ''} - {self.title}"
 
 class DailySchedule(models.Model):
     DAYS_OF_WEEK = [
@@ -266,3 +277,6 @@ class ScheduleItemCompletion(models.Model):
 
     class Meta:
         unique_together = ['user', 'schedule_item', 'date']
+
+
+
