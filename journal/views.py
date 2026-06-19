@@ -16,7 +16,7 @@ from django.views.generic import CreateView
 from django.views.generic import TemplateView
 
 from .forms import CustomRegisterForm
-from .models import Task
+from .models import Task, ScheduleSection
 
 logger = logging.getLogger(__name__)
 
@@ -137,13 +137,15 @@ def schedule_delete_template(request, template_id):
 @login_required
 def schedule_template_items(request, template_id):
     """Получить пункты расписания шаблона"""
-    items = ScheduleItem.objects.filter(template_id=template_id)
+    sections = ScheduleSection.objects.filter(template_id=template_id)
+    items = ScheduleItem.objects.filter(section__in=sections)
     data = [{
         'id': i.id,
-        'time': i.time,
+        'time': i.time or '',
         'title': i.title,
-        'description': i.description,
-        'order': i.order
+        'description': i.description or '',
+        'order': i.order,
+        'is_info': i.is_info
     } for i in items]
     return JsonResponse({'items': data})
 
@@ -152,15 +154,28 @@ def schedule_template_items(request, template_id):
 def schedule_update_items(request, template_id):
     """Обновить все пункты расписания шаблона"""
     data = json.loads(request.body)
-    items = data.get('items', [])
+    items_data = data.get('items', [])
 
-    # Удаляем старые пункты
-    ScheduleItem.objects.filter(template_id=template_id).delete()
+    # Получаем все секции этого шаблона
+    sections = ScheduleSection.objects.filter(template_id=template_id)
 
-    # Создаём новые
-    for idx, item in enumerate(items):
-        ScheduleItem.objects.create(
+    # Удаляем все старые пункты из всех секций этого шаблона
+    ScheduleItem.objects.filter(section__in=sections).delete()
+
+    # Если нет секций, создаём дефолтную
+    if not sections.exists():
+        default_section = ScheduleSection.objects.create(
             template_id=template_id,
+            title="Основное",
+            order=0
+        )
+        sections = [default_section]
+
+    # Создаём новые пункты в первой секции
+    section = sections.first()
+    for idx, item in enumerate(items_data):
+        ScheduleItem.objects.create(
+            section=section,
             time=item.get('time', ''),
             title=item.get('title', ''),
             description=item.get('description', ''),
@@ -211,9 +226,8 @@ from datetime import date
 def today_schedule(request):
     """Получить расписание на сегодня"""
     today = timezone.now().date()
-    day_of_week = today.weekday()  # 0 = понедельник, 6 = воскресенье
+    day_of_week = today.weekday()
 
-    # Получаем шаблон для сегодняшнего дня
     daily_schedule = DailySchedule.objects.filter(
         user=request.user,
         day_of_week=day_of_week,
@@ -225,9 +239,11 @@ def today_schedule(request):
 
     if daily_schedule:
         template = daily_schedule.template
-        items = ScheduleItem.objects.filter(template=template).order_by('order', 'time')
+        # Получаем все секции этого шаблона
+        sections = ScheduleSection.objects.filter(template=template)
+        # Получаем все пункты из всех секций
+        items = ScheduleItem.objects.filter(section__in=sections).order_by('order', 'time')
 
-        # Получаем статусы выполнения для каждого пункта
         for item in items:
             completion = ScheduleItemCompletion.objects.filter(
                 user=request.user,
@@ -238,9 +254,9 @@ def today_schedule(request):
 
     items_data = [{
         'id': item.id,
-        'time': item.time,
+        'time': item.time or '',
         'title': item.title,
-        'description': item.description
+        'description': item.description or ''
     } for item in items]
 
     return JsonResponse({

@@ -57,8 +57,8 @@ class ScheduleManager {
             <div class="template-name">${template.name}</div>
             ${template.description ? `<div class="template-description">${template.description}</div>` : ''}
             <div class="template-actions">
-                <button class="edit-template-btn" data-id="${template.id}">✎</button>
-                <button class="edit-schedule-btn" data-id="${template.id}">📋</button>
+                <button class="edit-template-btn" data-id="${template.id}" title="Редактировать">✎</button>
+                <button class="edit-schedule-btn" data-id="${template.id}"  title="Добавить пунткы">📋</button>
             </div>
         `;
 

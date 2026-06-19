@@ -72,10 +72,12 @@
 }
 
 .week-stats {
-    padding: 8px 20px;
-    background: linear-gradient(135deg, var(--accent-bg), var(--card-bg));
+    padding: 8px 18px;
+    background: var(--card-bg);
     border-radius: 30px;
-    font-weight: 600;
+    font-weight: 500;
+
+    font-size: 14px;
     border: 1px solid var(--border-color);
 }
 

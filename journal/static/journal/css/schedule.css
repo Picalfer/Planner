@@ -62,13 +62,12 @@
     border-radius: 6px;
     padding: 12px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: 0.4s;
     border-left: 3px solid transparent;
 }
 
 .template-card:hover {
-    transform: translateX(2px);
-    background: var(--card-bg);
+    background: var(--accent-bg);
 }
 
 .template-card.active {

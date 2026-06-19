@@ -59,7 +59,7 @@
 
 .modal-content .close:hover {
     color: var(--danger);
-    background: rgba(0, 0, 0, 0.2);
+    /*background: rgba(0, 0, 0, 0.2);*/
 }
 
 .modal-title {
@@ -112,7 +112,7 @@
 }
 
 .modal .checkbox-label {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 10px;
     cursor: pointer;
