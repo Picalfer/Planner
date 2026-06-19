@@ -374,3 +374,125 @@
     background: var(--primary);
     color: var(--text-primary);
 }
+
+/* Секции в модалке */
+.section-block {
+    background: var(--light);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--primary);
+}
+
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.section-title-input {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+    flex: 1;
+    margin-right: 8px;
+}
+
+.section-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.section-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+}
+
+.section-actions button:hover {
+    background: var(--card-bg);
+}
+
+.section-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 8px;
+}
+
+.section-item {
+    display: flex;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--card-bg);
+    border-radius: 4px;
+}
+
+.section-item input {
+    background: var(--light);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+.section-item .item-time {
+    width: 70px;
+}
+
+.section-item .item-title {
+    flex: 1;
+}
+
+.section-item .remove-item {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+}
+
+.add-section-btn {
+    background: var(--accent-color);
+    color: var(--text-primary);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 8px 0;
+    width: 100%;
+}
+
+.add-section-btn:hover {
+    background: var(--accent-bg);
+}
+
+.schedule-section {
+    margin-bottom: 20px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.schedule-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.schedule-items-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

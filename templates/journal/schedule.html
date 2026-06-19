@@ -72,8 +72,15 @@
     <div class="modal-content modal-large">
         <span class="close">&times;</span>
         <h3 class="modal-title" id="schedule-items-title">Редактировать расписание</h3>
-        <div id="schedule-items-list"></div>
+
+        <!-- Список секций и пунктов -->
+        <div id="sections-container">
+            <!-- Секции и пункты будут загружаться через JS -->
+        </div>
+
+        <button class="add-section-btn" id="add-section-btn">+ Добавить секцию</button>
         <button class="add-item-btn" id="add-item-btn">+ Добавить пункт</button>
+
         <div class="form-actions">
             <button class="styled-button" id="save-schedule-items-btn">Сохранить</button>
         </div>

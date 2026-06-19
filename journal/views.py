@@ -152,7 +152,6 @@ def schedule_template_items(request, template_id):
 
 @login_required
 def schedule_update_items(request, template_id):
-    """Обновить все пункты расписания шаблона"""
     data = json.loads(request.body)
     items_data = data.get('items', [])
 
@@ -162,28 +161,32 @@ def schedule_update_items(request, template_id):
     # Удаляем все старые пункты из всех секций этого шаблона
     ScheduleItem.objects.filter(section__in=sections).delete()
 
-    # Если нет секций, создаём дефолтную
-    if not sections.exists():
-        default_section = ScheduleSection.objects.create(
-            template_id=template_id,
-            title="Основное",
-            order=0
-        )
-        sections = [default_section]
-
-    # Создаём новые пункты в первой секции
-    section = sections.first()
+    # Создаём новые пункты, привязывая к конкретной секции
     for idx, item in enumerate(items_data):
-        ScheduleItem.objects.create(
-            section=section,
-            time=item.get('time', ''),
-            title=item.get('title', ''),
-            description=item.get('description', ''),
-            order=idx
-        )
+        section_id = item.get('section_id')
+        if section_id:
+            ScheduleItem.objects.create(
+                section_id=section_id,
+                time=item.get('time', ''),
+                title=item.get('title', ''),
+                description=item.get('description', ''),
+                order=idx
+            )
 
     return JsonResponse({'success': True})
 
+
+@login_required
+def schedule_update_section(request, section_id):
+    section = ScheduleSection.objects.get(id=section_id)
+    data = json.loads(request.body)
+
+    section.title = data.get('title', section.title)
+    section.icon = data.get('icon', section.icon)
+    section.order = data.get('order', section.order)
+    section.save()
+
+    return JsonResponse({'success': True})
 
 @login_required
 def schedule_daily_list(request):
@@ -224,7 +227,6 @@ from datetime import date
 
 @login_required
 def today_schedule(request):
-    """Получить расписание на сегодня"""
     today = timezone.now().date()
     day_of_week = today.weekday()
 
@@ -236,35 +238,43 @@ def today_schedule(request):
 
     items = []
     completions = {}
+    sections_data = []
 
     if daily_schedule:
         template = daily_schedule.template
-        # Получаем все секции этого шаблона
-        sections = ScheduleSection.objects.filter(template=template)
-        # Получаем все пункты из всех секций
-        items = ScheduleItem.objects.filter(section__in=sections).order_by('order', 'time')
+        sections = ScheduleSection.objects.filter(template=template).order_by('order')
 
-        for item in items:
-            completion = ScheduleItemCompletion.objects.filter(
-                user=request.user,
-                schedule_item=item,
-                date=today
-            ).first()
-            completions[item.id] = completion.is_completed if completion else False
+        for section in sections:
+            section_items = ScheduleItem.objects.filter(section=section).order_by('order', 'time')
 
-    items_data = [{
-        'id': item.id,
-        'time': item.time or '',
-        'title': item.title,
-        'description': item.description or ''
-    } for item in items]
+            section_data = {
+                'id': section.id,
+                'title': section.title,
+                'items': []
+            }
+
+            for item in section_items:
+                completion = ScheduleItemCompletion.objects.filter(
+                    user=request.user,
+                    schedule_item=item,
+                    date=today
+                ).first()
+                completions[item.id] = completion.is_completed if completion else False
+
+                section_data['items'].append({
+                    'id': item.id,
+                    'time': item.time or '',
+                    'title': item.title,
+                    'description': item.description or ''
+                })
+
+            sections_data.append(section_data)
 
     return JsonResponse({
-        'items': items_data,
+        'sections': sections_data,
         'completions': completions,
         'has_template': daily_schedule is not None
     })
-
 
 @login_required
 def today_schedule_toggle(request):
@@ -1065,3 +1075,47 @@ def goals_update_monthly_report(request):
         report.text = data['text']
         report.save()
     return JsonResponse({'success': True})
+
+
+@login_required
+def schedule_sections_list(request, template_id):
+    sections = ScheduleSection.objects.filter(template_id=template_id)
+    data = [{
+        'id': s.id,
+        'title': s.title,
+        'icon': s.icon or '',
+        'order': s.order
+    } for s in sections]
+    return JsonResponse({'sections': data})
+
+@login_required
+def schedule_section_items(request, section_id):
+    items = ScheduleItem.objects.filter(section_id=section_id)
+    data = [{
+        'id': i.id,
+        'time': i.time or '',
+        'title': i.title,
+        'description': i.description or '',
+        'order': i.order,
+        'is_info': i.is_info
+    } for i in items]
+    return JsonResponse({'items': data})
+
+
+@login_required
+def schedule_create_section(request):
+    data = json.loads(request.body)
+
+    section = ScheduleSection.objects.create(
+        template_id=data['template_id'],
+        title=data['title'],
+        icon=data.get('icon', ''),
+        order=data.get('order', 0)
+    )
+
+    return JsonResponse({
+        'id': section.id,
+        'title': section.title,
+        'icon': section.icon,
+        'order': section.order
+    })

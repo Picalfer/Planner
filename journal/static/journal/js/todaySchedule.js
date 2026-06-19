@@ -18,7 +18,7 @@ class TodayScheduleManager {
     renderDate() {
         const dateElement = document.getElementById('current-date');
         const today = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
         dateElement.textContent = today.toLocaleDateString('ru-RU', options);
     }
 
@@ -27,9 +27,10 @@ class TodayScheduleManager {
             const response = await fetch('/api/schedule/today/');
             if (response.ok) {
                 const data = await response.json();
-                this.items = data.items || [];
+                this.sections = data.sections || [];
                 this.completions = data.completions || {};
                 this.updateProgress();
+                this.renderTimeline();
             } else {
                 console.error('Failed to load schedule');
             }
@@ -42,25 +43,38 @@ class TodayScheduleManager {
         const container = document.getElementById('schedule-timeline');
         if (!container) return;
 
-        if (this.items.length === 0) {
+        if (this.sections.length === 0) {
             container.innerHTML = `
-                <div class="loading">
-                    <p>Нет расписания на сегодня</p>
-                    <p style="font-size: 12px; margin-top: 8px;">Настройте шаблон в разделе "Настройки"</p>
-                </div>
-            `;
+            <div class="loading">
+                <p>Нет расписания на сегодня</p>
+                <p style="font-size: 12px; margin-top: 8px;">Настройте шаблон в разделе "Настройки"</p>
+            </div>
+        `;
             return;
         }
 
         container.innerHTML = '';
 
-        // Сортируем по времени
-        const sortedItems = [...this.items].sort((a, b) => a.time.localeCompare(b.time));
+        this.sections.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'schedule-section';
 
-        sortedItems.forEach(item => {
-            const isCompleted = this.completions[item.id] || false;
-            const itemCard = this.createScheduleCard(item, isCompleted);
-            container.appendChild(itemCard);
+            const sectionTitle = document.createElement('h3');
+            sectionTitle.className = 'schedule-section-title';
+            sectionTitle.textContent = section.title;
+            sectionDiv.appendChild(sectionTitle);
+
+            const itemsContainer = document.createElement('div');
+            itemsContainer.className = 'schedule-items-group';
+
+            section.items.forEach(item => {
+                const isCompleted = this.completions[item.id] || false;
+                const itemCard = this.createScheduleCard(item, isCompleted);
+                itemsContainer.appendChild(itemCard);
+            });
+
+            sectionDiv.appendChild(itemsContainer);
+            container.appendChild(sectionDiv);
         });
     }
 
@@ -206,16 +220,25 @@ class TodayScheduleManager {
     }
 
     updateProgress() {
-        const total = this.items.length;
+        let total = 0;
+        let completed = 0;
+
+        this.sections.forEach(section => {
+            section.items.forEach(item => {
+                total++;
+                if (this.completions[item.id]) {
+                    completed++;
+                }
+            });
+        });
+
         if (total === 0) {
             document.getElementById('progress-percent').textContent = '0%';
             document.getElementById('progress-fill').style.width = '0%';
             return;
         }
 
-        const completed = Object.values(this.completions).filter(v => v === true).length;
         const percent = Math.round((completed / total) * 100);
-
         document.getElementById('progress-percent').textContent = `${percent}%`;
         document.getElementById('progress-fill').style.width = `${percent}%`;
     }

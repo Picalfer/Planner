@@ -41,19 +41,19 @@ class ScheduleManager {
     }
 
     renderTemplates() {
-    const container = document.getElementById('templates-list');
-    if (!container) return;
+        const container = document.getElementById('templates-list');
+        if (!container) return;
 
-    if (this.templates.length === 0) {
-        container.innerHTML = '<div class="template-card placeholder">Нет шаблонов. Создайте первый!</div>';
-        return;
-    }
+        if (this.templates.length === 0) {
+            container.innerHTML = '<div class="template-card placeholder">Нет шаблонов. Создайте первый!</div>';
+            return;
+        }
 
-    container.innerHTML = '';
-    this.templates.forEach(template => {
-        const card = document.createElement('div');
-        card.className = `template-card ${template.is_default ? 'default' : ''}`;
-        card.innerHTML = `
+        container.innerHTML = '';
+        this.templates.forEach(template => {
+            const card = document.createElement('div');
+            card.className = `template-card ${template.is_default ? 'default' : ''}`;
+            card.innerHTML = `
             <div class="template-name">${template.name}</div>
             ${template.description ? `<div class="template-description">${template.description}</div>` : ''}
             <div class="template-actions">
@@ -62,22 +62,22 @@ class ScheduleManager {
             </div>
         `;
 
-        // Редактирование шаблона (название, описание, default)
-        card.querySelector('.edit-template-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.openTemplateModal(template.id);
-        });
+            // Редактирование шаблона (название, описание, default)
+            card.querySelector('.edit-template-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openTemplateModal(template.id);
+            });
 
-        // Редактирование пунктов расписания
-        card.querySelector('.edit-schedule-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.currentTemplateId = template.id;
-            this.openTemplateItemsModal();
-        });
+            // Редактирование пунктов расписания
+            card.querySelector('.edit-schedule-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.currentTemplateId = template.id;
+                this.openTemplateItemsModal();
+            });
 
-        container.appendChild(card);
-    });
-}
+            container.appendChild(card);
+        });
+    }
 
     selectTemplate(templateId) {
         this.currentTemplateId = templateId;
@@ -91,19 +91,39 @@ class ScheduleManager {
 
         const modal = document.getElementById('schedule-items-modal');
         const title = document.getElementById('schedule-items-title');
-        const container = document.getElementById('schedule-items-list');
+        const container = document.getElementById('sections-container');
 
         title.textContent = `Расписание: ${template.name}`;
+        container.innerHTML = '';
 
-        // Загружаем пункты расписания
         try {
-            const response = await fetch(`/api/schedule/templates/${this.currentTemplateId}/items/`);
-            if (response.ok) {
-                const data = await response.json();
-                this.renderScheduleItems(container, data.items);
+            // Загружаем секции шаблона
+            const sectionsResponse = await fetch(`/api/schedule/templates/${this.currentTemplateId}/sections/`);
+            if (sectionsResponse.ok) {
+                const sectionsData = await sectionsResponse.json();
+                const sections = sectionsData.sections;
+
+                if (sections.length === 0) {
+                    // Если нет секций, создаём дефолтную
+                    const defaultSection = await this.createDefaultSection(this.currentTemplateId);
+                    sections.push(defaultSection);
+                }
+
+                // Для каждой секции загружаем её пункты
+                for (const section of sections) {
+                    const itemsResponse = await fetch(`/api/schedule/sections/${section.id}/items/`);
+                    if (itemsResponse.ok) {
+                        const itemsData = await itemsResponse.json();
+                        section.items = itemsData.items;
+                    } else {
+                        section.items = [];
+                    }
+                }
+
+                this.renderSections(container, sections);
             }
         } catch (error) {
-            console.error('Error loading schedule items:', error);
+            console.error('Error loading sections:', error);
         }
 
         modal.style.display = 'flex';
@@ -169,6 +189,94 @@ class ScheduleManager {
                 this.openDayScheduleModal(day);
             });
         });
+    }
+
+    async createDefaultSection(templateId) {
+        try {
+            const response = await fetch('/api/schedule/sections/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    template_id: templateId,
+                    title: 'Основное'
+                })
+            });
+            if (response.ok) {
+                return await response.json();
+            }
+        } catch (error) {
+            console.error('Error creating default section:', error);
+        }
+        return {id: null, title: 'Основное', items: []};
+    }
+
+    renderSections(container, sections) {
+        container.innerHTML = '';
+
+        sections.forEach((section, sectionIndex) => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section-block';
+            sectionDiv.dataset.sectionId = section.id;
+
+            // Заголовок секции
+            const headerRow = document.createElement('div');
+            headerRow.className = 'section-header-row';
+            headerRow.innerHTML = `
+            <input type="text" class="section-title-input" value="${section.title}" placeholder="Название секции">
+            <div class="section-actions">
+                <button class="add-item-to-section-btn" title="Добавить пункт в секцию">+</button>
+                <button class="remove-section-btn" title="Удалить секцию">×</button>
+            </div>
+        `;
+            sectionDiv.appendChild(headerRow);
+
+            // Список пунктов
+            const itemsContainer = document.createElement('div');
+            itemsContainer.className = 'section-items';
+
+            (section.items || []).forEach((item) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'section-item';
+                itemDiv.dataset.itemId = item.id;
+                itemDiv.innerHTML = `
+                <input type="time" class="item-time" value="${item.time || ''}" placeholder="Время">
+                <input type="text" class="item-title" value="${item.title}" placeholder="Название">
+                <input type="text" class="item-desc" value="${item.description || ''}" placeholder="Описание">
+                <button class="remove-item">×</button>
+            `;
+                itemsContainer.appendChild(itemDiv);
+            });
+
+            sectionDiv.appendChild(itemsContainer);
+            container.appendChild(sectionDiv);
+
+            // Обработчик добавления пункта в эту секцию
+            headerRow.querySelector('.add-item-to-section-btn').addEventListener('click', () => {
+                this.addItemToSection(sectionDiv);
+            });
+        });
+    }
+
+    addItemToSection(sectionDiv) {
+        const itemsContainer = sectionDiv.querySelector('.section-items');
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'section-item';
+        itemDiv.innerHTML = `
+        <input type="time" class="item-time" placeholder="Время">
+        <input type="text" class="item-title" placeholder="Название">
+        <input type="text" class="item-desc" placeholder="Описание">
+        <button class="remove-item">×</button>
+    `;
+
+        itemDiv.querySelector('.remove-item').addEventListener('click', () => {
+            itemDiv.remove();
+        });
+
+        itemsContainer.appendChild(itemDiv);
     }
 
     async openDayScheduleModal(day) {
@@ -253,24 +361,6 @@ class ScheduleManager {
             saveItemsBtn.addEventListener('click', () => this.saveScheduleItems());
         }
 
-        // Добавление пункта расписания
-        const addItemBtn = document.getElementById('add-item-btn');
-        if (addItemBtn) {
-            addItemBtn.addEventListener('click', () => {
-                const container = document.getElementById('schedule-items-list');
-                const emptyItem = document.createElement('div');
-                emptyItem.className = 'schedule-item';
-                emptyItem.innerHTML = `
-                    <input type="time" class="item-time" placeholder="09:00">
-                    <input type="text" class="item-title" placeholder="Название">
-                    <input type="text" class="item-desc" placeholder="Описание">
-                    <button class="remove-item">×</button>
-                `;
-                emptyItem.querySelector('.remove-item').addEventListener('click', () => emptyItem.remove());
-                container.appendChild(emptyItem);
-            });
-        }
-
         // Закрытие модалок
         document.querySelectorAll('.modal .close').forEach(closeBtn => {
             closeBtn.addEventListener('click', () => {
@@ -283,70 +373,142 @@ class ScheduleManager {
                 if (e.target === modal) modal.style.display = 'none';
             });
         });
+
+        // Добавление секции
+        const addSectionBtn = document.getElementById('add-section-btn');
+        if (addSectionBtn) {
+            addSectionBtn.addEventListener('click', () => {
+                this.addSection();
+            });
+        }
+
+        // Добавление пункта
+        const addItemBtn = document.getElementById('add-item-btn');
+        if (addItemBtn) {
+            addItemBtn.addEventListener('click', () => {
+                this.addItemToCurrentSection();
+            });
+        }
+    }
+
+    async addSection() {
+        if (!this.currentTemplateId) return;
+
+        try {
+            const response = await fetch('/api/schedule/sections/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    template_id: this.currentTemplateId,
+                    title: 'Новая секция'
+                })
+            });
+
+            if (response.ok) {
+                // Перезагружаем модалку
+                await this.openTemplateItemsModal();
+                showNotification('Секция создана', 'success');
+            }
+        } catch (error) {
+            console.error('Error adding section:', error);
+            showNotification('Ошибка', 'error');
+        }
+    }
+
+    addItemToCurrentSection() {
+        // Находим последнюю секцию
+        const sections = document.querySelectorAll('.section-block');
+        if (sections.length === 0) {
+            showNotification('Сначала создайте секцию', 'error');
+            return;
+        }
+
+        const lastSection = sections[sections.length - 1];
+        const itemsContainer = lastSection.querySelector('.section-items');
+
+        // Создаём новый пункт
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'section-item';
+        itemDiv.innerHTML = `
+        <input type="time" class="item-time" placeholder="Время">
+        <input type="text" class="item-title" placeholder="Название">
+        <input type="text" class="item-desc" placeholder="Описание">
+        <button class="remove-item">×</button>
+    `;
+
+        // Обработчик удаления
+        itemDiv.querySelector('.remove-item').addEventListener('click', () => {
+            itemDiv.remove();
+        });
+
+        itemsContainer.appendChild(itemDiv);
     }
 
     openTemplateModal(templateId = null) {
-    const modal = document.getElementById('template-modal');
-    const title = document.getElementById('template-modal-title');
-    const deleteBtn = document.getElementById('delete-template-btn');
-    const form = document.getElementById('template-form');
+        const modal = document.getElementById('template-modal');
+        const title = document.getElementById('template-modal-title');
+        const deleteBtn = document.getElementById('delete-template-btn');
+        const form = document.getElementById('template-form');
 
-    form.reset();
-    document.getElementById('template-id').value = '';
+        form.reset();
+        document.getElementById('template-id').value = '';
 
-    if (templateId) {
-        const template = this.templates.find(t => t.id === templateId);
-        if (template) {
-            title.textContent = 'Редактировать шаблон';
-            deleteBtn.style.display = 'block';
-            document.getElementById('template-id').value = template.id;
-            document.getElementById('template-name').value = template.name;
-            document.getElementById('template-description').value = template.description || '';
-            document.getElementById('template-default').checked = template.is_default;
-            this.currentEditId = templateId;
+        if (templateId) {
+            const template = this.templates.find(t => t.id === templateId);
+            if (template) {
+                title.textContent = 'Редактировать шаблон';
+                deleteBtn.style.display = 'block';
+                document.getElementById('template-id').value = template.id;
+                document.getElementById('template-name').value = template.name;
+                document.getElementById('template-description').value = template.description || '';
+                document.getElementById('template-default').checked = template.is_default;
+                this.currentEditId = templateId;
 
-            // Убираем старый обработчик и добавляем новый
-            const newDeleteBtn = deleteBtn.cloneNode(true);
-            deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-            newDeleteBtn.addEventListener('click', () => this.deleteTemplate(templateId));
-        }
-    } else {
-        title.textContent = 'Создать шаблон';
-        deleteBtn.style.display = 'none';
-        this.currentEditId = null;
-    }
-
-    modal.style.display = 'flex';
-}
-
-async deleteTemplate(templateId) {
-    if (!confirm('Удалить этот шаблон? Все пункты расписания будут также удалены.')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/api/schedule/templates/${templateId}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': this.getCSRFToken()
+                // Убираем старый обработчик и добавляем новый
+                const newDeleteBtn = deleteBtn.cloneNode(true);
+                deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+                newDeleteBtn.addEventListener('click', () => this.deleteTemplate(templateId));
             }
-        });
-
-        if (response.ok) {
-            document.getElementById('template-modal').style.display = 'none';
-            await this.loadTemplates();
-            await this.loadDailySchedules();
-            this.renderTemplates();
-            this.renderDays();
-            showNotification('Шаблон удалён', 'success');
         } else {
-            showNotification('Ошибка при удалении', 'error');
+            title.textContent = 'Создать шаблон';
+            deleteBtn.style.display = 'none';
+            this.currentEditId = null;
         }
-    } catch (error) {
-        console.error('Error deleting template:', error);
-        showNotification('Ошибка', 'error');
+
+        modal.style.display = 'flex';
     }
-}
+
+    async deleteTemplate(templateId) {
+        if (!confirm('Удалить этот шаблон? Все пункты расписания будут также удалены.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/schedule/templates/${templateId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCSRFToken()
+                }
+            });
+
+            if (response.ok) {
+                document.getElementById('template-modal').style.display = 'none';
+                await this.loadTemplates();
+                await this.loadDailySchedules();
+                this.renderTemplates();
+                this.renderDays();
+                showNotification('Шаблон удалён', 'success');
+            } else {
+                showNotification('Ошибка при удалении', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting template:', error);
+            showNotification('Ошибка', 'error');
+        }
+    }
 
     async saveTemplate() {
         const templateId = document.getElementById('template-id').value;
@@ -388,20 +550,52 @@ async deleteTemplate(templateId) {
         if (!this.currentTemplateId) return;
 
         const items = [];
-        const container = document.getElementById('schedule-items-list');
-        const itemDivs = container.querySelectorAll('.schedule-item');
+        const sections = document.querySelectorAll('.section-block');
+        const sectionsData = [];
 
-        itemDivs.forEach(div => {
-            const time = div.querySelector('.item-time').value;
-            const title = div.querySelector('.item-title').value;
-            const description = div.querySelector('.item-desc').value;
+        sections.forEach(sectionDiv => {
+            const sectionId = parseInt(sectionDiv.dataset.sectionId);
+            const sectionTitle = sectionDiv.querySelector('.section-title-input').value;
 
-            if (time && title) {
-                items.push({time, title, description});
-            }
+            // Сохраняем данные о секции
+            sectionsData.push({
+                id: sectionId,
+                title: sectionTitle
+            });
+
+            const itemDivs = sectionDiv.querySelectorAll('.section-item');
+            itemDivs.forEach(div => {
+                const time = div.querySelector('.item-time').value;
+                const title = div.querySelector('.item-title').value;
+                const description = div.querySelector('.item-desc').value;
+
+                if (title.trim()) {
+                    items.push({
+                        section_id: sectionId,
+                        time: time || '',
+                        title: title,
+                        description: description || ''
+                    });
+                }
+            });
         });
 
         try {
+            // Сначала обновляем названия секций
+            for (const section of sectionsData) {
+                await fetch(`/api/schedule/sections/${section.id}/update/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        title: section.title
+                    })
+                });
+            }
+
+            // Затем обновляем пункты
             const response = await fetch(`/api/schedule/templates/${this.currentTemplateId}/items/update/`, {
                 method: 'POST',
                 headers: {

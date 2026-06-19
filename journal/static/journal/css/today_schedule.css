@@ -219,6 +219,17 @@
     color: var(--text-secondary);
 }
 
+.schedule-items-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;  /* ← уже должно быть, проверь */
+}
+
+.schedule-item-card {
+    /* ... существующие стили ... */
+    margin-bottom: 4px;  /* Добавь если gap не работает */
+}
+
 /* Адаптивность */
 @media (max-width: 600px) {
     .today-schedule-container {

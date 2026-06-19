@@ -62,4 +62,10 @@ path('api/schedule/today/', views.today_schedule, name='api_today_schedule'),  #
 path('api/schedule/today/toggle/', views.today_schedule_toggle, name='api_today_schedule_toggle'),
 path('api/schedule/today/item/<int:item_id>/delete/', views.today_schedule_delete_item, name='api_today_schedule_delete_item'),
 path('api/schedule/today/item/<int:item_id>/update/', views.today_schedule_update_item, name='api_today_schedule_update_item'),
+
+# Schedule Sections API
+path('api/schedule/templates/<int:template_id>/sections/', views.schedule_sections_list, name='schedule_sections_list'),
+path('api/schedule/sections/<int:section_id>/items/', views.schedule_section_items, name='schedule_section_items'),
+path('api/schedule/sections/create/', views.schedule_create_section, name='schedule_create_section'),
+path('api/schedule/sections/<int:section_id>/update/', views.schedule_update_section, name='schedule_update_section'),
     ]
