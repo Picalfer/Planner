@@ -1,0 +1,1 @@
+CreateObject("WScript.Shell").Run "C:\Users\land\PycharmProjects\Planner\start_django.bat", 0, False
